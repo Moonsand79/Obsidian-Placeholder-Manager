@@ -1,0 +1,52 @@
+{
+  "name": "obsidian-placeholder-manager",
+  "version": "0.1.2",
+  "private": true,
+  "description": "Structured placeholder management for writing in Obsidian.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "check:lockfile": "node scripts/check-lockfile.mjs",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "check:metadata": "node scripts/check-release-metadata.mjs",
+    "check:validator": "node scripts/check-release-validator.mjs",
+    "check:artifacts": "node scripts/check-release-artifacts.mjs",
+    "build:bundle": "node esbuild.config.mjs production",
+    "build": "npm run typecheck && npm run build:bundle",
+    "test": "node scripts/run-tests.mjs",
+    "test:unit": "node scripts/run-tests.mjs unit",
+    "test:property": "node scripts/run-tests.mjs property",
+    "test:integration": "node scripts/run-tests.mjs integration",
+    "test:smoke": "node scripts/run-tests.mjs smoke",
+    "benchmark": "node scripts/run-benchmarks.mjs",
+    "benchmark:check": "node scripts/run-benchmarks.mjs --check",
+    "release:check": "node scripts/run-release-gates.mjs",
+    "release:stage": "node scripts/stage-release.mjs",
+    "check:mobile": "node scripts/check-mobile-compatibility.mjs",
+    "check:mobile-validator": "node scripts/check-mobile-validator.mjs",
+    "check:readability": "node scripts/check-code-readability.mjs",
+    "check:architecture": "node scripts/check-architecture-doc.mjs",
+    "check:community": "node scripts/check-community-review.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@codemirror/state": "6.7.0",
+    "@codemirror/view": "6.43.5",
+    "@eslint/js": "9.39.4",
+    "@types/node": "22.15.17",
+    "esbuild": "0.25.5",
+    "eslint": "9.39.4",
+    "eslint-plugin-obsidianmd": "0.4.2",
+    "globals": "17.6.0",
+    "jiti": "2.6.1",
+    "obsidian": "1.13.2",
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.59.1"
+  }
+}

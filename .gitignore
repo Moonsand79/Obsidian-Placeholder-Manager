@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Generated plugin bundle; attach it to GitHub releases instead.
+main.js
+*.map
+
+# Local Obsidian plugin data
+data.json
+
+# Local archives and OS metadata
+*.zip
+.DS_Store
+
+# Disposable compiled test harness
+.test-build/
+
+# Disposable compiled performance harness
+.benchmark-build/
+
+# Staged release payload; generated only after release gates pass.
+dist/

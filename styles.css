@@ -1,0 +1,276 @@
+/* Placeholder Manager v0.1.2 */
+
+.placeholder-manager-token {
+  --placeholder-manager-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--placeholder-manager-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--placeholder-manager-color) 55%, transparent);
+  border-radius: 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.05em 0.25em;
+  text-decoration: none;
+}
+
+.placeholder-manager-token.placeholder-manager-priority-high {
+  border-width: 2px;
+}
+
+.placeholder-manager-token.placeholder-manager-priority-low {
+  opacity: 0.78;
+}
+
+.placeholder-manager-token.placeholder-manager-type-unknown {
+  border-style: dashed;
+}
+
+.placeholder-manager-reading-token {
+  --placeholder-manager-color: var(--interactive-accent);
+}
+
+.placeholder-manager-reading-token .placeholder-manager-reading-chip {
+  display: none;
+}
+
+.placeholder-manager-reading-enabled .placeholder-manager-reading-token .placeholder-manager-reading-raw {
+  display: none;
+}
+
+.placeholder-manager-reading-enabled .placeholder-manager-reading-token .placeholder-manager-reading-chip {
+  display: inline;
+  background: color-mix(in srgb, var(--placeholder-manager-color) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--placeholder-manager-color) 50%, transparent);
+  border-radius: 999px;
+  padding: 0.08em 0.45em 0.1em 0.35em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.placeholder-manager-reading-enabled .placeholder-manager-reading-token.placeholder-manager-priority-high .placeholder-manager-reading-chip {
+  border-width: 2px;
+}
+
+.placeholder-manager-reading-enabled .placeholder-manager-reading-token.placeholder-manager-type-unknown .placeholder-manager-reading-chip {
+  border-style: dashed;
+}
+
+.placeholder-manager-reading-badge,
+.placeholder-manager-badge {
+  background: var(--placeholder-manager-color);
+  color: var(--text-on-accent);
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  margin-right: 0.45em;
+  padding: 0.08em 0.42em;
+  text-transform: uppercase;
+}
+
+.placeholder-manager-type-unknown .placeholder-manager-reading-badge,
+.placeholder-manager-row-unknown .placeholder-manager-badge {
+  background: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.placeholder-manager-view {
+  padding: 10px 10px 24px;
+}
+
+.placeholder-manager-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.placeholder-manager-header h3 {
+  margin: 0;
+}
+
+.placeholder-manager-count {
+  color: var(--text-muted);
+  display: block;
+  font-size: var(--font-ui-smaller);
+  margin-top: 2px;
+}
+
+.placeholder-manager-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.placeholder-manager-controls select,
+.placeholder-manager-search {
+  width: 100%;
+}
+
+.placeholder-manager-search {
+  margin-bottom: 12px;
+}
+
+.placeholder-manager-file-heading {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: 650;
+  margin: 14px 4px 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder-manager-row {
+  --placeholder-manager-color: var(--interactive-accent);
+  border-left: 3px solid var(--placeholder-manager-color);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  margin: 3px 0;
+  padding: 7px 8px 7px 9px;
+}
+
+.placeholder-manager-row.placeholder-manager-row-unknown {
+  border-left-style: dashed;
+}
+
+.placeholder-manager-row:hover,
+.placeholder-manager-row:focus-visible {
+  background: var(--background-modifier-hover);
+  outline: none;
+}
+
+.placeholder-manager-row[data-priority="high"] {
+  background: color-mix(in srgb, var(--placeholder-manager-color) 8%, transparent);
+}
+
+.placeholder-manager-row-text {
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  line-height: 1.35;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+}
+
+.placeholder-manager-row-meta {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  margin-top: 3px;
+}
+
+.placeholder-manager-empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  padding: 18px 6px;
+  text-align: center;
+}
+
+.placeholder-manager-modal-text {
+  min-width: min(360px, 65vw);
+}
+
+.placeholder-manager-modal-context {
+  color: var(--text-muted);
+}
+
+.placeholder-manager-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+@media (max-width: 600px) {
+  .placeholder-manager-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .placeholder-manager-modal-text {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* Mobile ergonomics and bounded sidebar rendering. */
+.placeholder-manager-show-more {
+  display: block;
+  margin: 12px auto 4px;
+  min-height: 36px;
+  padding: 6px 14px;
+}
+
+.placeholder-manager-modal {
+  max-height: min(80vh, 720px);
+  max-height: min(80dvh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.placeholder-manager-modal textarea,
+.placeholder-manager-modal input,
+.placeholder-manager-modal select {
+  max-width: 100%;
+}
+
+@media (max-width: 600px) {
+  .placeholder-manager-view {
+    padding: 8px 8px max(20px, env(safe-area-inset-bottom));
+  }
+
+  .placeholder-manager-header .clickable-icon,
+  .placeholder-manager-row,
+  .placeholder-manager-show-more,
+  .placeholder-manager-modal-actions button {
+    min-height: 44px;
+  }
+
+  .placeholder-manager-row {
+    margin: 4px 0;
+    padding: 9px 10px;
+    touch-action: manipulation;
+  }
+
+  .placeholder-manager-controls select,
+  .placeholder-manager-search,
+  .placeholder-manager-modal input,
+  .placeholder-manager-modal textarea,
+  .placeholder-manager-modal select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .placeholder-manager-modal {
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - max(24px, env(safe-area-inset-top)) - max(24px, env(safe-area-inset-bottom)));
+    overscroll-behavior: contain;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .placeholder-manager-modal .setting-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .placeholder-manager-modal .setting-item-control {
+    width: 100%;
+  }
+
+  .placeholder-manager-modal-actions {
+    background: var(--background-primary);
+    bottom: 0;
+    flex-wrap: wrap;
+    margin-inline: calc(var(--size-4-3) * -1);
+    padding: 10px var(--size-4-3) max(10px, env(safe-area-inset-bottom));
+    position: sticky;
+    z-index: 1;
+  }
+
+  .placeholder-manager-modal-actions button {
+    flex: 1 1 120px;
+    touch-action: manipulation;
+  }
+
+  .placeholder-manager-show-more {
+    width: 100%;
+  }
+}
