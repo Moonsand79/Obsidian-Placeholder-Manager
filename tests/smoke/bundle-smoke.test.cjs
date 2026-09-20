@@ -100,7 +100,13 @@ function loadBundle() {
   fs.writeFileSync(tempPath, bundleText);
   delete require.cache[tempPath];
   try {
-    return { PluginClass: withExternalStubs(() => require(tempPath)), bundleText };
+    return {
+      PluginClass: withExternalStubs(() => {
+        const loaded = require(tempPath);
+        return loaded?.default ?? loaded;
+      }),
+      bundleText,
+    };
   } finally {
     delete require.cache[tempPath];
     fs.rmSync(tempPath, { force: true });

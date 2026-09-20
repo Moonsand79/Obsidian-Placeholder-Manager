@@ -47,6 +47,16 @@ const checks = [
     required: ["registerUi", "openManagerView", "handleLayoutReady", "dispose"],
   },
   {
+    file: "src/ui/view.ts",
+    retired: [/private\s+scope\s*:/],
+    required: ["placeholderScope"],
+  },
+  {
+    file: "tests/harness/fakes.ts",
+    retired: [/class\s+TestEditor\s+implements\s+Editor/],
+    required: ["class TestEditor extends Editor"],
+  },
+  {
     file: "src/ui/reading-view.ts",
     retired: [/\bprocess\s*\(/, /refreshAll\s*\(/, /updateEnabledClass/, /restoreAll\s*\(/],
     required: ["processRenderedSection", "refreshAllPreviews", "syncEnabledClass", "restoreAllPreviews"],

@@ -1,4 +1,4 @@
-import { DEVELOPMENT_ASSERTIONS_ENABLED, assertPlaceholderRecordListInvariants } from "../dev-invariants";
+import { assertPlaceholderRecordListInvariants } from "../dev-invariants";
 import type {
   ParseOptions,
   PlaceholderInput,
@@ -7,6 +7,12 @@ import type {
 } from "../types";
 import { findMarkdownExclusionRanges } from "../markdown/source-exclusions";
 import { PlaceholderSyntaxScanner } from "./scanner";
+
+declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
+const BUILD_ASSERTIONS_ENABLED =
+  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
+    ? __PLACEHOLDER_DEV_ASSERTIONS__
+    : true;
 
 export const PRIORITIES: ReadonlySet<Priority> = new Set(["low", "normal", "high"]);
 const TYPE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
@@ -39,15 +45,23 @@ export function splitFields(input: string): string[] {
   return fields;
 }
 
-export function escapeField(value: unknown): string {
-  return String(value ?? "")
+export function escapeField(value: string): string {
+  return value
     .replace(/\\/g, "\\\\")
     .replace(/\|/g, "\\|")
     .replace(/\}/g, "\\}");
 }
 
+function scalarString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
+  return fallback;
+}
+
 export function normalizeType(value: unknown): string {
-  const normalized = String(value || "general").trim().toLowerCase();
+  const normalized = scalarString(value, "general").trim().toLowerCase();
   return normalized || "general";
 }
 
@@ -56,7 +70,7 @@ export function isValidTypeId(value: string): boolean {
 }
 
 export function sanitizeTypeId(value: unknown): string {
-  return String(value || "")
+  return scalarString(value)
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -66,16 +80,16 @@ export function sanitizeTypeId(value: unknown): string {
 }
 
 export function normalizePriority(value: unknown): Priority {
-  const normalized = String(value || "normal").trim().toLowerCase();
+  const normalized = scalarString(value, "normal").trim().toLowerCase();
   return PRIORITIES.has(normalized as Priority) ? (normalized as Priority) : "normal";
 }
 
 export function parsePlaceholders(
-  source: unknown,
+  source: string,
   filePath = "",
   options: ParseOptions = {},
 ): PlaceholderRecord[] {
-  const text = String(source ?? "");
+  const text = source;
   const excluded = options.excludeMarkdown === false ? [] : findMarkdownExclusionRanges(text);
   const results: PlaceholderRecord[] = [];
   const lineStarts = buildLineStarts(text);
@@ -102,7 +116,7 @@ export function parsePlaceholders(
     candidate = scanner.next();
   }
 
-  if (DEVELOPMENT_ASSERTIONS_ENABLED) {
+  if (BUILD_ASSERTIONS_ENABLED) {
     assertPlaceholderRecordListInvariants(results, { source: text, filePath });
   }
   return results;

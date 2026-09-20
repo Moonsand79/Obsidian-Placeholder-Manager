@@ -42,16 +42,16 @@ export function findNavigationTarget(
   return placeholders[placeholders.length - 1] ?? null;
 }
 
-export function cursorToOffset(source: unknown, position: Position): number {
-  const lines = String(source ?? "").split("\n");
+export function cursorToOffset(source: string, position: Position): number {
+  const lines = source.split("\n");
   let offset = 0;
   const targetLine = Math.max(0, Math.min(position.line, lines.length - 1));
   for (let i = 0; i < targetLine; i += 1) offset += (lines[i]?.length ?? 0) + 1;
   return offset + Math.max(0, Math.min(position.ch, lines[targetLine]?.length ?? 0));
 }
 
-export function offsetToCursor(source: unknown, offset: number): Position {
-  const text = String(source ?? "");
+export function offsetToCursor(source: string, offset: number): Position {
+  const text = source;
   const safeOffset = Math.max(0, Math.min(offset, text.length));
   let line = 0;
   let lineStart = 0;

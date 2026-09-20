@@ -260,11 +260,11 @@ function collectTextRuns(root: HTMLElement): RenderedTextRun[] {
   };
 
   const visit = (node: Node): void => {
-    if (node instanceof Element && isReadingViewExcludedElement(node)) {
+    if (node.instanceOf(Element) && isReadingViewExcludedElement(node)) {
       flush();
       return;
     }
-    if (node instanceof Text) {
+    if (node.instanceOf(Text)) {
       if (node.nodeValue) current.push(node);
       return;
     }

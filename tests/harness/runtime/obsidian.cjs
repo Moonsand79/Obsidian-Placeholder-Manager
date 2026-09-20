@@ -23,6 +23,7 @@ class FakeNode {
     this.childNodes = [];
     this.isConnected = true;
   }
+  instanceOf(type) { return this instanceof type; }
   appendChild(node) {
     if (node instanceof FakeDocumentFragment) {
       while (node.firstChild) this.appendChild(node.firstChild);
@@ -389,6 +390,8 @@ class Plugin {
   register(callback) { return callback; }
 }
 
+class Editor {}
+
 class ItemView {
   constructor(leaf) {
     this.leaf = leaf;
@@ -416,6 +419,7 @@ class Modal {
 
 class PluginSettingTab {
   constructor(app, plugin) { this.app = app; this.plugin = plugin; this.containerEl = document.createElement("div"); }
+  update() { if (typeof this.display === "function") this.display(); }
 }
 
 class TextComponent {
@@ -479,6 +483,7 @@ function setIcon(element, icon) { element.dataset.icon = icon; }
 
 module.exports = {
   Plugin,
+  Editor,
   ItemView,
   MarkdownView,
   Modal,

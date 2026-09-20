@@ -40,7 +40,7 @@ function makeHarness() {
 test("integration settings UI: project property commits on blur, not each keystroke", async () => {
   const { tab, settings, calls } = makeHarness();
   const inputs = [...tab.containerEl.querySelectorAll("input")];
-  const project = inputs.find((input) => input.getAttribute("placeholder") === "work");
+  const project = inputs.find((input) => input.getAttribute("placeholder") === "Work");
   assert.ok(project);
   project.value = " project ";
   project.dispatchEvent({ type: "input" } as Event);
@@ -62,7 +62,7 @@ test("integration settings UI: existing type IDs are visibly disabled", () => {
 test("integration settings UI: add-type flow uses the permanent ID entered by the user", async () => {
   const { tab, settings } = makeHarness();
   const inputs = [...tab.containerEl.querySelectorAll("input")];
-  const addInput = inputs.find((input) => input.getAttribute("placeholder") === "scene-note");
+  const addInput = inputs.find((input) => input.getAttribute("placeholder") === "Scene-note");
   assert.ok(addInput);
   addInput.value = "scene-note";
   addInput.dispatchEvent({ type: "input" } as Event);
@@ -90,7 +90,7 @@ test("integration settings UI: Reading View toggle targets only the enabled-stat
 test("integration settings UI: invalid permanent type IDs are rejected without mutating settings", async () => {
   const { tab, settings } = makeHarness();
   const inputs = [...tab.containerEl.querySelectorAll("input")];
-  const addInput = inputs.find((input) => input.getAttribute("placeholder") === "scene-note");
+  const addInput = inputs.find((input) => input.getAttribute("placeholder") === "Scene-note");
   assert.ok(addInput);
   addInput.value = "Scene Notes";
   addInput.dispatchEvent({ type: "input" } as Event);

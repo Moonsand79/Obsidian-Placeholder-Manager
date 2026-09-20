@@ -1,4 +1,4 @@
-import type { App, Editor, EventRef, MetadataCache, TAbstractFile, TFile, Vault, Workspace } from "obsidian";
+import { Editor, type App, type EventRef, type MetadataCache, type TAbstractFile, type TFile, type Vault, type Workspace } from "obsidian";
 import type { PlaceholderErrorCode, PlaceholderErrorContext, PlaceholderErrorReporter } from "../../src/errors/error-reporter";
 import type { Position } from "../../src/types";
 
@@ -199,7 +199,7 @@ export function createTestApp(): TestAppHarness {
   };
 }
 
-export class TestEditor implements Editor {
+export class TestEditor extends Editor {
   private value: string;
   private cursor: Position;
   private selectionText = "";
@@ -209,23 +209,27 @@ export class TestEditor implements Editor {
   focused = false;
 
   constructor(value: string, cursor: Position = { line: 0, ch: 0 }) {
+    super();
     this.value = value;
     this.cursor = cursor;
   }
 
+  refresh(): void {}
   getValue(): string { return this.value; }
   setValue(value: string): void { this.value = value; }
-  getCursor(): Position { return { ...this.cursor }; }
-  setCursor(pos: Position): void { this.cursor = { ...pos }; }
+  getCursor(_which?: "from" | "to" | "head" | "anchor"): Position { return { ...this.cursor }; }
+  setCursor(pos: Position | number, ch = 0): void {
+    this.cursor = typeof pos === "number" ? { line: pos, ch } : { ...pos };
+  }
   getSelection(): string { return this.selectionText; }
   setTestSelectionText(value: string): void { this.selectionText = value; }
 
-  replaceSelection(replacement: string): void {
+  replaceSelection(replacement: string, _origin?: string): void {
     this.replacements.push({ text: replacement, from: this.cursor });
     this.value = replacement;
   }
 
-  replaceRange(replacement: string, from: Position, to?: Position): void {
+  replaceRange(replacement: string, from: Position, to?: Position, _origin?: string): void {
     this.replacements.push({ text: replacement, from, ...(to ? { to } : {}) });
     const start = positionToOffset(this.value, from);
     const end = to ? positionToOffset(this.value, to) : start;
@@ -238,31 +242,36 @@ export class TestEditor implements Editor {
     this.cursor = { ...to };
   }
 
-  scrollIntoView(range: { from: Position; to: Position }): void {
+  scrollIntoView(range: { from: Position; to: Position }, _center?: boolean): void {
     this.scrolled.push({ from: { ...range.from }, to: { ...range.to } });
   }
 
   focus(): void { this.focused = true; }
+  blur(): void { this.focused = false; }
+  hasFocus(): boolean { return this.focused; }
 
-  // Methods below are not used by Placeholder Manager tests but are part of
-  // Obsidian's Editor interface. Keep permissive no-op implementations here so
-  // integration tests exercise the production controller rather than a casted partial.
-  somethingSelected(): boolean { return this.selectionText.length > 0; }
+  // The remaining methods satisfy Obsidian's abstract Editor contract. Tests
+  // intentionally keep them minimal because Placeholder Manager does not use them.
   getLine(line: number): string { return this.value.split("\n")[line] ?? ""; }
   lineCount(): number { return this.value.split("\n").length; }
   lastLine(): number { return this.lineCount() - 1; }
   getRange(from: Position, to: Position): string {
     return this.value.slice(positionToOffset(this.value, from), positionToOffset(this.value, to));
   }
-  getWordAt(): { from: Position; to: Position; word: string } | null { return null; }
   listSelections(): Array<{ anchor: Position; head: Position }> {
     const selection = this.selections[this.selections.length - 1];
     return selection ? [{ anchor: { ...selection.from }, head: { ...selection.to } }] : [];
   }
-  setSelections(): void {}
+  setSelections(_ranges: unknown[], _main?: number): void {}
+  getScrollInfo(): { top: number; left: number } { return { top: 0, left: 0 }; }
+  scrollTo(_x?: number | null, _y?: number | null): void {}
+  undo(): void {}
+  redo(): void {}
+  exec(_command: string): void {}
+  transaction(_tx: unknown, _origin?: string): void {}
+  wordAt(_pos: Position): { from: Position; to: Position } | null { return null; }
   posToOffset(pos: Position): number { return positionToOffset(this.value, pos); }
   offsetToPos(offset: number): Position { return offsetToPosition(this.value, offset); }
-  transaction(): void {}
 }
 
 function positionToOffset(source: string, position: Position): number {

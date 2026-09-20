@@ -13,11 +13,17 @@ export interface MobileLifecycleEnvironment {
   now: () => number;
 }
 
-const DEFAULT_ENVIRONMENT: MobileLifecycleEnvironment = {
-  document,
-  window,
-  now: () => Date.now(),
-};
+function createDefaultEnvironment(): MobileLifecycleEnvironment {
+  return {
+    get document(): Document {
+      return window.document;
+    },
+    get window(): Window {
+      return window;
+    },
+    now: () => Date.now(),
+  };
+}
 
 /**
  * Mobile apps can be suspended without a normal plugin unload. Reconcile the
@@ -40,7 +46,7 @@ export class PlaceholderMobileLifecycleController {
     index: PlaceholderIndex,
     errors: PlaceholderErrorReporter,
     platform: PlaceholderRuntimePlatform,
-    environment: MobileLifecycleEnvironment = DEFAULT_ENVIRONMENT,
+    environment: MobileLifecycleEnvironment = createDefaultEnvironment(),
   ) {
     this.app = app;
     this.index = index;

@@ -28,7 +28,8 @@ export class PlaceholderEditorDecorationController {
   }
 
   createExtension(): Extension {
-    const owner = this;
+    const trackedViews = this.views;
+    const resolveAppearance = this.resolveAppearance;
 
     class PlaceholderDecorationPlugin {
       readonly view: EditorView;
@@ -37,7 +38,7 @@ export class PlaceholderEditorDecorationController {
 
       constructor(view: EditorView) {
         this.view = view;
-        owner.views.add(view);
+        trackedViews.add(view);
         this.placeholders = parsePlaceholders(view.state.doc.toString());
         this.decorations = this.build(view);
       }
@@ -56,7 +57,7 @@ export class PlaceholderEditorDecorationController {
       }
 
       destroy(): void {
-        owner.views.delete(this.view);
+        trackedViews.delete(this.view);
       }
 
       private build(view: EditorView): DecorationSet {
@@ -64,7 +65,7 @@ export class PlaceholderEditorDecorationController {
 
         for (const placeholder of this.placeholders) {
           if (!intersectsVisibleRange(view.visibleRanges, placeholder.start, placeholder.end)) continue;
-          const appearance = owner.resolveAppearance(placeholder.type);
+          const appearance = resolveAppearance(placeholder.type);
           const className = [
             "placeholder-manager-token",
             `placeholder-manager-type-${safeCssToken(placeholder.type)}`,

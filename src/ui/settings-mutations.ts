@@ -1,7 +1,13 @@
-import { DEVELOPMENT_ASSERTIONS_ENABLED, InvariantViolationError } from "../dev-invariants";
+import { InvariantViolationError } from "../dev-invariants";
 import { ERROR_CODES, type PlaceholderErrorReporter } from "../errors/error-reporter";
 import { isValidTypeId } from "../parser/parser";
 import type { PlaceholderSettings, PlaceholderType } from "../types";
+
+declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
+const BUILD_ASSERTIONS_ENABLED =
+  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
+    ? __PLACEHOLDER_DEV_ASSERTIONS__
+    : true;
 
 export type SettingsMutationResult =
   | { ok: true }
@@ -127,7 +133,7 @@ export class PlaceholderSettingsMutations {
       await this.deps.saveSettings();
     } catch (error) {
       rollback();
-      if (DEVELOPMENT_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
+      if (BUILD_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
       this.deps.errors.reportBackground(
         ERROR_CODES.SETTINGS_SAVE,
         "Failed to persist settings; restored the previous in-memory value.",
@@ -171,7 +177,7 @@ export class KeyedDebouncer {
   private readonly delayMs: number;
   private readonly onTaskError: (error: unknown, key: string) => void;
   private readonly pending = new Map<string, {
-    timer: ReturnType<typeof setTimeout>;
+    timer: number;
     task: () => void | Promise<void>;
   }>();
 
@@ -182,9 +188,9 @@ export class KeyedDebouncer {
 
   schedule(key: string, task: () => void | Promise<void>): void {
     const existing = this.pending.get(key);
-    if (existing) clearTimeout(existing.timer);
+    if (existing) window.clearTimeout(existing.timer);
 
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       const current = this.pending.get(key);
       if (!current || current.timer !== timer) return;
       this.pending.delete(key);
@@ -197,13 +203,13 @@ export class KeyedDebouncer {
     const pending = [...this.pending.entries()];
     this.pending.clear();
     for (const [key, entry] of pending) {
-      clearTimeout(entry.timer);
+      window.clearTimeout(entry.timer);
       this.runTask(key, entry.task);
     }
   }
 
   cancelAll(): void {
-    for (const entry of this.pending.values()) clearTimeout(entry.timer);
+    for (const entry of this.pending.values()) window.clearTimeout(entry.timer);
     this.pending.clear();
   }
 

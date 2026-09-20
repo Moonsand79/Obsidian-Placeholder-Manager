@@ -33,7 +33,7 @@ interface ScopedPlaceholderResult {
 
 export class PlaceholderManagerView extends ItemView {
   private readonly deps: PlaceholderManagerViewDeps;
-  private scope: PlaceholderScope = "current";
+  private placeholderScope: PlaceholderScope = "current";
   private searchQuery = "";
   private typeFilter = "all";
   private unsubscribeFromIndex: (() => void) | null = null;
@@ -89,7 +89,7 @@ export class PlaceholderManagerView extends ItemView {
     const header = container.createDiv({ cls: "placeholder-manager-header" });
     const titleWrap = header.createDiv();
     titleWrap.createEl("h3", { text: "Placeholders" });
-    const countEl = titleWrap.createEl("span", { cls: "placeholder-manager-count" });
+    const countEl = titleWrap.createSpan({ cls: "placeholder-manager-count" });
 
     const rebuildButton = header.createEl("button", {
       cls: "clickable-icon",
@@ -111,9 +111,9 @@ export class PlaceholderManagerView extends ItemView {
     addOption(scopeSelect, "current", "Current file");
     addOption(scopeSelect, "project", "Project");
     addOption(scopeSelect, "vault", "Vault");
-    scopeSelect.value = this.scope;
+    scopeSelect.value = this.placeholderScope;
     scopeSelect.addEventListener("change", () => {
-      this.scope = scopeSelect.value as PlaceholderScope;
+      this.placeholderScope = scopeSelect.value as PlaceholderScope;
       this.resetRenderLimit();
       this.renderView();
     });
@@ -173,14 +173,14 @@ export class PlaceholderManagerView extends ItemView {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     const activeFile = activeView?.file ?? null;
 
-    if (this.scope === "current") {
+    if (this.placeholderScope === "current") {
       return {
         records: activeFile ? this.deps.index.getPlaceholdersForFile(activeFile.path) : [],
         emptyReason: null,
       };
     }
 
-    if (this.scope === "project") {
+    if (this.placeholderScope === "project") {
       const projectScope = this.deps.index.getProjectScopeState(activeFile);
       return {
         records: activeFile ? this.deps.index.getPlaceholdersForProject(activeFile) : [],

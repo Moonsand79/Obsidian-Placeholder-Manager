@@ -1,7 +1,6 @@
 import { TFile, type App, type Plugin } from "obsidian";
 import { ERROR_CODES, type PlaceholderErrorReporter } from "../errors/error-reporter";
 import {
-  DEVELOPMENT_ASSERTIONS_ENABLED,
   InvariantViolationError,
   assertIndexEntryInvariants,
   assertIndexInvariants,
@@ -11,7 +10,13 @@ import type { PlaceholderRecord, PlaceholderSettings } from "../types";
 import { FileRevisionTracker } from "./file-revisions";
 import { projectIdsFromValue, projectIdsIntersect } from "./project-scope";
 
-export const INITIAL_SCAN_BATCH_SIZE = 20;
+declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
+const BUILD_ASSERTIONS_ENABLED =
+  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
+    ? __PLACEHOLDER_DEV_ASSERTIONS__
+    : true;
+
+export const INITIAL_SCAN_BATCH_SIZE = 8;
 
 export interface PlaceholderIndexOptions {
   initialScanBatchSize?: number;
@@ -104,7 +109,7 @@ export class PlaceholderIndex {
     this.overlayChangesSince(stagedRecords, revisionSnapshot);
     if (!this.isCurrentRebuild(generation)) return;
 
-    if (DEVELOPMENT_ASSERTIONS_ENABLED) assertCurrentIndex(stagedRecords, this.app);
+    if (BUILD_ASSERTIONS_ENABLED) assertCurrentIndex(stagedRecords, this.app);
     replaceIndexContents(this.recordsByFile, stagedRecords);
     this.lastRebuildFailures = [...failedPaths].sort();
     this.ready = true;
@@ -124,14 +129,14 @@ export class PlaceholderIndex {
       if (!this.fileRevisions.isCurrent(path, revision)) return false;
       if (file.path !== path || file.extension !== "md") return false;
 
-      if (DEVELOPMENT_ASSERTIONS_ENABLED && parsed.length > 0) {
+      if (BUILD_ASSERTIONS_ENABLED && parsed.length > 0) {
         assertCurrentIndexEntry(path, parsed, this.app);
       }
       applyParsedResult(this.recordsByFile, path, parsed);
       if (notify) this.notifyChangeListeners();
       return true;
     } catch (error) {
-      if (DEVELOPMENT_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
+      if (BUILD_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
       this.errors.reportBackground(
         ERROR_CODES.INDEX_FILE_REFRESH,
         "Failed to refresh placeholder index data for a file; preserving the last known-good records.",
@@ -145,7 +150,7 @@ export class PlaceholderIndex {
   removeFileFromIndex(path: string, notify = true): void {
     this.fileRevisions.invalidate(path);
     this.recordsByFile.delete(path);
-    if (DEVELOPMENT_ASSERTIONS_ENABLED) assertCurrentIndex(this.recordsByFile, this.app);
+    if (BUILD_ASSERTIONS_ENABLED) assertCurrentIndex(this.recordsByFile, this.app);
     if (notify) this.notifyChangeListeners();
   }
 
@@ -180,7 +185,8 @@ export class PlaceholderIndex {
     }
     if (!file) return { projectIds: [], reason: "No active Markdown file." };
 
-    const rawValue = this.app.metadataCache.getFileCache(file)?.frontmatter?.[property];
+    const frontmatter: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter;
+    const rawValue = isRecord(frontmatter) ? frontmatter[property] : undefined;
     const projectIds = projectIdsFromValue(rawValue);
     if (projectIds.length > 0) return { projectIds, reason: null };
 
@@ -312,7 +318,7 @@ export class PlaceholderIndex {
       applyParsedResult(stagedRecords, path, parsed);
       return true;
     } catch (error) {
-      if (DEVELOPMENT_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
+      if (BUILD_ASSERTIONS_ENABLED && error instanceof InvariantViolationError) throw error;
       this.errors.reportBackground(
         ERROR_CODES.INDEX_FULL_SCAN_FILE,
         "Failed to index a file during a full scan; preserving the last known-good records.",
@@ -377,5 +383,9 @@ function replaceIndexContents(
 }
 
 function yieldToEventLoop(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

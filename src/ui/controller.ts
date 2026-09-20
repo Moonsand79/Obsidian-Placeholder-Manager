@@ -71,7 +71,7 @@ export class PlaceholderUiController {
     if (leaves.length === 0) {
       await leaf.setViewState({ type: PLACEHOLDER_MANAGER_VIEW, active: true });
     }
-    this.deps.app.workspace.revealLeaf(leaf);
+    await this.deps.app.workspace.revealLeaf(leaf);
   }
 
   handleLayoutReady(): void {
@@ -101,7 +101,7 @@ export class PlaceholderUiController {
   }
 
   private registerRibbonAction(): void {
-    this.deps.plugin.addRibbonIcon("brackets", "Open Placeholder Manager", () => {
+    this.deps.plugin.addRibbonIcon("brackets", "Open placeholder manager", () => {
       void this.openManagerView().catch((error: unknown) => {
         this.deps.errors.reportCommand(
           ERROR_CODES.COMMAND_OPEN_MANAGER,

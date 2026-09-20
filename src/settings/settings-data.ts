@@ -1,6 +1,12 @@
-import { DEVELOPMENT_ASSERTIONS_ENABLED, assertSettingsInvariants } from "../dev-invariants";
+import { assertSettingsInvariants } from "../dev-invariants";
 import { sanitizeTypeId } from "../parser/parser";
 import type { PlaceholderSettings, PlaceholderType } from "../types";
+
+declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
+const BUILD_ASSERTIONS_ENABLED =
+  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
+    ? __PLACEHOLDER_DEV_ASSERTIONS__
+    : true;
 
 export const SETTINGS_SCHEMA_VERSION = 1 as const;
 
@@ -123,7 +129,7 @@ export function normalizeSettings(data: unknown): PlaceholderSettings {
       seen.add(id);
       types.push({
         id,
-        name: String(raw.name || id),
+        name: scalarString(raw.name, id),
         color: normalizeColor(raw.color),
       });
     }
@@ -152,7 +158,7 @@ export function normalizeSettings(data: unknown): PlaceholderSettings {
       types: types.length > 0 ? types : cloneDefaultTypes(),
     };
 
-  if (DEVELOPMENT_ASSERTIONS_ENABLED) assertSettingsInvariants(normalized);
+  if (BUILD_ASSERTIONS_ENABLED) assertSettingsInvariants(normalized);
   return normalized;
 }
 
@@ -181,13 +187,22 @@ function deepEqualJson(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+
+function scalarString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint") {
+    return String(value);
+  }
+  return fallback;
+}
+
 function normalizeProjectProperty(value: unknown): string {
   if (value === undefined || value === null) return DEFAULT_SETTINGS.projectProperty;
-  return String(value).trim();
+  return scalarString(value, DEFAULT_SETTINGS.projectProperty).trim();
 }
 
 function normalizeColor(value: unknown): string {
-  const color = String(value || "").trim();
+  const color = typeof value === "string" ? value.trim() : "";
   return /^#[0-9a-f]{6}$/i.test(color) ? color : "#7c7c7c";
 }
 

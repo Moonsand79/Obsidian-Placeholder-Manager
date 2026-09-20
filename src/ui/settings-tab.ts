@@ -49,11 +49,13 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
       .setName("Project property")
       .setDesc("Frontmatter/property used to decide which notes belong to the same writing project.")
       .addText((text) => {
-        text.setPlaceholder("work").setValue(this.deps.settings.projectProperty);
+        text.setPlaceholder("Work").setValue(this.deps.settings.projectProperty);
         text.inputEl.addEventListener("blur", () => {
           this.runMutation(
             () => this.deps.mutations.setProjectProperty(text.inputEl.value),
-            () => text.setValue(this.deps.settings.projectProperty),
+            () => {
+              text.setValue(this.deps.settings.projectProperty);
+            },
           );
         });
       });
@@ -61,8 +63,8 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
 
   private renderReadingViewSetting(): void {
     new Setting(this.containerEl)
-      .setName("Style placeholders in Reading View")
-      .setDesc("Show placeholders as readable chips instead of raw placeholder syntax in Reading View.")
+      .setName("Style placeholders in reading view")
+      .setDesc("Show placeholders as readable chips instead of raw placeholder syntax in reading view.")
       .addToggle((toggle) => toggle
         .setValue(this.deps.settings.enableReadingView)
         .onChange((value) => {
@@ -73,7 +75,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
   private renderTypeSettings(): void {
     new Setting(this.containerEl)
       .setName("Placeholder types")
-      .setDesc("Type IDs are stored in Markdown and are immutable after creation. General is permanent. Display names and colors remain editable.")
+      .setDesc("Type ids are stored in Markdown and are immutable after creation. The general type is permanent. Display names and colors remain editable.")
       .setHeading();
 
     for (const type of this.deps.settings.types) this.renderTypeSetting(type);
@@ -85,7 +87,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
 
     setting.addText((text) => {
       text
-        .setPlaceholder("type-id")
+        .setPlaceholder("Type-id")
         .setValue(type.id)
         .setDisabled(true);
       text.inputEl.title = isGeneral
@@ -120,7 +122,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
         .onClick(() => {
           this.runMutation(
             () => this.deps.mutations.deleteType(type.id),
-            () => this.display(),
+            () => this.update(),
           );
         }));
     }
@@ -132,7 +134,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
       .setName("Add placeholder type")
       .setDesc("Choose the permanent ID before creating the type. Use lowercase letters, numbers, hyphens, or underscores.")
       .addText((text) => text
-        .setPlaceholder("scene-note")
+        .setPlaceholder("Scene-note")
         .onChange((value) => {
           pendingTypeId = value.trim();
         }))
@@ -142,7 +144,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
         .onClick(() => {
           this.runMutation(
             () => this.deps.mutations.addType(pendingTypeId),
-            () => this.display(),
+            () => this.update(),
           );
         }));
   }

@@ -125,7 +125,7 @@ export class PlaceholderEditorController {
   private registerOpenManagerCommand(plugin: Plugin): void {
     plugin.addCommand({
       id: "open-placeholder-manager",
-      name: "Open placeholder manager",
+      name: "Open manager",
       callback: () => {
         void this.openManagerView().catch((error: unknown) => {
           this.errors.reportCommand(
@@ -160,7 +160,7 @@ export class PlaceholderEditorController {
   private registerEditCommand(plugin: Plugin): void {
     plugin.addCommand({
       id: "edit-placeholder",
-      name: "Edit placeholder at cursor",
+      name: "Edit placeholder",
       editorCheckCallback: (checking: boolean, editor: Editor) => {
         const context = this.getPlaceholderContextAtCursor(editor);
         if (!context) return false;
@@ -187,7 +187,7 @@ export class PlaceholderEditorController {
   private registerResolveCommand(plugin: Plugin): void {
     plugin.addCommand({
       id: "resolve-placeholder",
-      name: "Resolve placeholder at cursor",
+      name: "Resolve placeholder",
       editorCheckCallback: (checking: boolean, editor: Editor) => {
         const context = this.getPlaceholderContextAtCursor(editor);
         if (!context) return false;
@@ -210,7 +210,7 @@ export class PlaceholderEditorController {
   private registerDeleteCommand(plugin: Plugin): void {
     plugin.addCommand({
       id: "delete-placeholder",
-      name: "Delete placeholder at cursor",
+      name: "Delete placeholder",
       editorCheckCallback: (checking: boolean, editor: Editor) => {
         const context = this.getPlaceholderContextAtCursor(editor);
         if (!context) return false;

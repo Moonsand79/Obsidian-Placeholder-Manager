@@ -72,45 +72,78 @@ async function main(): Promise<void> {
     await mobileVaultIndex.rebuild();
   }, { warmup: 1, samples: 5 }));
 
+  const yieldHarness = createBenchmarkApp(
+    500,
+    (index) => makeProseSource(50_000, 25 + (index % 10)),
+  );
+  const yieldIndex = new PlaceholderIndex(
+    yieldHarness.app,
+    () => DEFAULT_SETTINGS,
+    benchmarkErrors,
+  );
+
   const yieldGaps: number[] = [];
   for (let sample = 0; sample < 4; sample += 1) {
-    const yieldHarness = createBenchmarkApp(500, (index) => makeProseSource(50_000, 25 + (index % 10)));
-    const yieldIndex = new PlaceholderIndex(yieldHarness.app, () => DEFAULT_SETTINGS, benchmarkErrors);
     const ticks: number[] = [performance.now()];
     const timer = setInterval(() => ticks.push(performance.now()), 0);
+
     await yieldIndex.rebuild();
+
     clearInterval(timer);
     ticks.push(performance.now());
+
     let maxGap = 0;
     for (let i = 1; i < ticks.length; i += 1) {
       const prior = ticks[i - 1];
       const current = ticks[i];
-      if (prior !== undefined && current !== undefined) maxGap = Math.max(maxGap, current - prior);
+      if (prior !== undefined && current !== undefined) {
+        maxGap = Math.max(maxGap, current - prior);
+      }
     }
+
     yieldGaps.push(maxGap);
   }
   add("index.yield-gap.500x50k", summarizeTimings(yieldGaps));
 
+  const mobileYieldHarness = createBenchmarkApp(
+    500,
+    (index) => makeProseSource(50_000, 25 + (index % 10)),
+  );
+  const mobileYieldIndex = new PlaceholderIndex(
+    mobileYieldHarness.app,
+    () => DEFAULT_SETTINGS,
+    benchmarkErrors,
+    {
+      initialScanBatchSize: MOBILE_INITIAL_SCAN_BATCH_SIZE,
+    },
+  );
+
   const mobileYieldGaps: number[] = [];
   for (let sample = 0; sample < 4; sample += 1) {
-    const yieldHarness = createBenchmarkApp(500, (index) => makeProseSource(50_000, 25 + (index % 10)));
-    const yieldIndex = new PlaceholderIndex(yieldHarness.app, () => DEFAULT_SETTINGS, benchmarkErrors, {
-      initialScanBatchSize: MOBILE_INITIAL_SCAN_BATCH_SIZE,
-    });
     const ticks: number[] = [performance.now()];
     const timer = setInterval(() => ticks.push(performance.now()), 0);
-    await yieldIndex.rebuild();
+
+    await mobileYieldIndex.rebuild();
+
     clearInterval(timer);
     ticks.push(performance.now());
+
     let maxGap = 0;
     for (let i = 1; i < ticks.length; i += 1) {
       const prior = ticks[i - 1];
       const current = ticks[i];
-      if (prior !== undefined && current !== undefined) maxGap = Math.max(maxGap, current - prior);
+      if (prior !== undefined && current !== undefined) {
+        maxGap = Math.max(maxGap, current - prior);
+      }
     }
+
     mobileYieldGaps.push(maxGap);
   }
-  add("index.mobile-yield-gap.500x50k", summarizeTimings(mobileYieldGaps));
+
+  add(
+    "index.mobile-yield-gap.500x50k",
+    summarizeTimings(mobileYieldGaps),
+  );
 
   const sidebar10k = makeSidebarRecords(10_000);
   const sidebar50k = makeSidebarRecords(50_000);
