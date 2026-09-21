@@ -1,7 +1,7 @@
 {
   "id": "placeholder-manager",
   "name": "Placeholder Manager",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "minAppVersion": "1.13.7",
   "description": "Create, highlight, navigate, track, and resolve structured writing placeholders.",
   "author": "Gawonii",

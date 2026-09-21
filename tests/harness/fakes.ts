@@ -1,4 +1,4 @@
-import { Editor, type App, type EventRef, type MetadataCache, type TAbstractFile, type TFile, type Vault, type Workspace } from "obsidian";
+import { Editor, TFile, type App, type EventRef, type MetadataCache, type TAbstractFile, type Vault, type Workspace } from "obsidian";
 import type { PlaceholderErrorCode, PlaceholderErrorContext, PlaceholderErrorReporter } from "../../src/errors/error-reporter";
 import type { Position } from "../../src/types";
 
@@ -99,6 +99,9 @@ export function createTestApp(): TestAppHarness {
       }
       return contents.get(file.path) ?? "";
     },
+    async modify(file: TFile, data: string): Promise<void> {
+      contents.set(file.path, data);
+    },
     on(name: string, callback: (...args: unknown[]) => void): EventRef {
       return vaultEmitter.on(name, callback);
     },
@@ -142,6 +145,20 @@ export function createTestApp(): TestAppHarness {
     },
     getActiveViewOfType(): unknown {
       return workspaceController.activeView;
+    },
+    getActiveFile(): TFile | null {
+      const activeView = workspaceController.activeView;
+
+      if (
+        activeView !== null &&
+        typeof activeView === "object" &&
+        "file" in activeView
+      ) {
+        const file = (activeView as { file?: unknown }).file;
+        return file instanceof TFile ? file : null;
+      }
+
+      return null;
     },
     getRightLeaf(): unknown {
       return workspaceController.rightLeaf;

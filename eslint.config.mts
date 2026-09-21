@@ -22,6 +22,7 @@ export default defineConfig(
     "benchmarks/**",
     ".test-build",
     ".benchmark-build",
+    "dist/**",
   ]),
   {
     languageOptions: {

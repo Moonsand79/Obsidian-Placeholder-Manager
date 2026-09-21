@@ -75,7 +75,7 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
   private renderTypeSettings(): void {
     new Setting(this.containerEl)
       .setName("Placeholder types")
-      .setDesc("Type ids are stored in Markdown and are immutable after creation. The general type is permanent. Display names and colors remain editable.")
+      .setDesc("Type ids are stored in Markdown. The general type is required; other types can be renamed or removed. Colors use six-digit hex codes.")
       .setHeading();
 
     for (const type of this.deps.settings.types) this.renderTypeSetting(type);
@@ -83,20 +83,39 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
 
   private renderTypeSetting(type: PlaceholderType): void {
     const isGeneral = type.id === "general";
-    const setting = new Setting(this.containerEl).setName(type.name || type.id);
+    const setting = new Setting(this.containerEl)
+      .setName(type.name || type.id);
 
     setting.addText((text) => {
       text
-        .setPlaceholder("Type-id")
+        .setPlaceholder("Type ID")
         .setValue(type.id)
-        .setDisabled(true);
+        .setDisabled(isGeneral);
+
       text.inputEl.title = isGeneral
-        ? "General is the permanent default type."
-        : "Type IDs are immutable after creation in Placeholder Manager V1.";
+        ? "General is the required fallback type."
+        : "Edit the permanent type ID.";
+
+      if (!isGeneral) {
+        text.inputEl.addEventListener("blur", () => {
+          const previousId = type.id;
+
+          this.runMutation(
+            () => this.deps.mutations.setTypeId(previousId, text.inputEl.value),
+            () => {
+              text.setValue(type.id);
+              setting.setName(type.name || type.id);
+            },
+          );
+        });
+      }
     });
 
     setting.addText((text) => {
-      text.setPlaceholder("Display name").setValue(type.name);
+      text
+        .setPlaceholder("Display name")
+        .setValue(type.name);
+
       text.inputEl.addEventListener("blur", () => {
         this.runMutation(
           () => this.deps.mutations.setTypeName(type.id, text.inputEl.value),
@@ -108,23 +127,38 @@ export class PlaceholderManagerSettingTab extends PluginSettingTab {
       });
     });
 
-    setting.addColorPicker((picker) => picker.setValue(type.color).onChange((value) => {
-      this.colorDebouncer.schedule(`type-color:${type.id}`, async () => {
-        const result = await this.deps.mutations.setTypeColor(type.id, value);
-        this.handleMutationResult(result);
+    setting.addText((text) => {
+      text
+        .setPlaceholder("Hex color")
+        .setValue(type.color);
+
+      text.inputEl.inputMode = "text";
+      text.inputEl.pattern = "#[0-9a-fA-F]{6}";
+      text.inputEl.maxLength = 7;
+      text.inputEl.title = "Enter a six-digit hex color, such as #7c7c7c.";
+
+      text.inputEl.addEventListener("blur", () => {
+        this.runMutation(
+          () => this.deps.mutations.setTypeColor(type.id, text.inputEl.value),
+          () => {
+            text.setValue(type.color);
+          },
+        );
       });
-    }));
+    });
 
     if (!isGeneral) {
-      setting.addExtraButton((button) => button
-        .setIcon("trash")
-        .setTooltip("Delete type")
-        .onClick(() => {
-          this.runMutation(
-            () => this.deps.mutations.deleteType(type.id),
-            () => this.update(),
-          );
-        }));
+      setting.addExtraButton((button) => {
+        button
+          .setIcon("trash")
+          .setTooltip("Delete type")
+          .onClick(() => {
+            this.runMutation(
+              () => this.deps.mutations.deleteType(type.id),
+              () => this.update(),
+            );
+          });
+      });
     }
   }
 

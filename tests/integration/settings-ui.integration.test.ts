@@ -51,12 +51,17 @@ test("integration settings UI: project property commits on blur, not each keystr
   assert.deepEqual(calls, ["save", "manager"]);
 });
 
-test("integration settings UI: existing type IDs are visibly disabled", () => {
+test("integration settings UI: general type ID is locked while other type IDs are editable", () => {
   const { tab } = makeHarness();
   const inputs = [...tab.containerEl.querySelectorAll("input")];
-  const idInputs = inputs.filter((input) => input.value === "general" || input.value === "research");
-  assert.equal(idInputs.length, 2);
-  assert.equal(idInputs.every((input) => input.disabled), true);
+
+  const general = inputs.find((input) => input.value === "general");
+  const research = inputs.find((input) => input.value === "research");
+
+  assert.ok(general);
+  assert.ok(research);
+  assert.equal(general.disabled, true);
+  assert.equal(research.disabled, false);
 });
 
 test("integration settings UI: add-type flow uses the permanent ID entered by the user", async () => {

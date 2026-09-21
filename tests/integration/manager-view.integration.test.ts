@@ -102,3 +102,71 @@ test("integration manager view: unknown-type filter is driven by appearance sema
   assert.equal(view.contentEl.querySelectorAll(".placeholder-manager-row").length, 1);
   assert.equal(view.contentEl.querySelector(".placeholder-manager-row-text")?.textContent, "Mystery");
 });
+
+
+test("integration manager view: retains current-file rows when the manager receives focus", async () => {
+  const harness = createTestApp();
+  const file = makeFile("Focused.md");
+  harness.vault.addFile(file);
+
+  const MarkdownViewCtor = MarkdownView as unknown as new (file: TFile) => MarkdownView;
+  harness.workspace.activeView = new MarkdownViewCtor(file);
+
+  const rows = [
+    record(file.path, "First placeholder"),
+    record(file.path, "Second placeholder", "research", 30),
+  ];
+
+  const index = {
+    isReady: true,
+    subscribeToChanges: () => () => {},
+    rebuild: async () => {},
+    getPlaceholdersForFile: (path: string) => path === file.path ? rows : [],
+    getProjectScopeState: () => ({ projectIds: [], reason: null }),
+    getPlaceholdersForProject: () => [],
+    getAllPlaceholders: () => rows,
+    getUnknownTypeIds: () => [],
+  } as never;
+
+  const view = new PlaceholderManagerView(
+    { app: harness.app } as unknown as WorkspaceLeaf,
+    {
+      index,
+      getSettings: () => settings,
+      resolveAppearance: (typeId) => ({
+        id: typeId,
+        name: typeId === "research" ? "Research" : "General",
+        color: "#777777",
+        unknown: false,
+      }),
+      revealPlaceholder: async () => {},
+      errors: new RecordingErrorReporter(),
+      runtimePlatform: desktopPlatform,
+    },
+  );
+
+  await view.onOpen();
+
+  assert.equal(
+    view.contentEl.querySelectorAll(".placeholder-manager-row").length,
+    2,
+  );
+  assert.equal(
+    view.contentEl.querySelector(".placeholder-manager-count")?.textContent,
+    "2 open",
+  );
+
+  // Simulate focus moving from the Markdown note to the manager itself.
+  // Obsidian may temporarily report no active Markdown file in this state.
+  harness.workspace.activeView = null;
+  harness.workspace.trigger("active-leaf-change", null);
+
+  assert.equal(
+    view.contentEl.querySelectorAll(".placeholder-manager-row").length,
+    2,
+  );
+  assert.equal(
+    view.contentEl.querySelector(".placeholder-manager-count")?.textContent,
+    "2 open",
+  );
+});

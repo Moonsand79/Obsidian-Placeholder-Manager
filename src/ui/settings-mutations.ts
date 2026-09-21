@@ -1,6 +1,7 @@
+import { TFile, type App } from "obsidian";
 import { InvariantViolationError } from "../dev-invariants";
 import { ERROR_CODES, type PlaceholderErrorReporter } from "../errors/error-reporter";
-import { isValidTypeId } from "../parser/parser";
+import { formatPlaceholder, isValidTypeId, parsePlaceholders } from "../parser/parser";
 import type { PlaceholderSettings, PlaceholderType } from "../types";
 
 declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
@@ -14,6 +15,7 @@ export type SettingsMutationResult =
   | { ok: false; message: string };
 
 export interface SettingsMutationDeps {
+  app?: App;
   settings: PlaceholderSettings;
   saveSettings: () => Promise<void>;
   refreshOpenManagerViews: () => void;
@@ -28,6 +30,11 @@ export interface SettingsMutationDeps {
  * Mutations are transactional with respect to persistence: if saveData()
  * fails, in-memory state is rolled back before the caller regains control.
  */
+interface TypeReferenceRewrite {
+  file: TFile;
+  source: string;
+}
+
 export class PlaceholderSettingsMutations {
   private readonly deps: SettingsMutationDeps;
 
@@ -58,6 +65,84 @@ export class PlaceholderSettingsMutations {
     );
   }
 
+  async setTypeId(oldId: string, value: string): Promise<SettingsMutationResult> {
+    const type = this.findType(oldId);
+    if (!type) return { ok: true };
+
+    if (oldId === "general") {
+      return {
+        ok: false,
+        message: "General is the required fallback type and its ID cannot be changed.",
+      };
+    }
+
+    const nextId = value.trim();
+
+    if (!isValidTypeId(nextId)) {
+      return {
+        ok: false,
+        message: "Type IDs must start with a lowercase letter or number and use only lowercase letters, numbers, hyphens, or underscores.",
+      };
+    }
+
+    if (
+      nextId !== oldId &&
+      this.deps.settings.types.some(
+        (candidate) => candidate.id.toLowerCase() === nextId.toLowerCase(),
+      )
+    ) {
+      return {
+        ok: false,
+        message: `A placeholder type with ID “${nextId}” already exists.`,
+      };
+    }
+
+    if (nextId === oldId) return { ok: true };
+
+    let rewritten: TypeReferenceRewrite[] = [];
+
+    try {
+      rewritten = await this.rewriteTypeReferences(oldId, nextId);
+    } catch (error) {
+      this.deps.errors.reportBackground(
+        ERROR_CODES.SETTINGS_SAVE,
+        "Couldn’t rename the placeholder type because existing placeholders could not be migrated.",
+        error,
+        { oldId, nextId },
+      );
+
+      return {
+        ok: false,
+        message: "Couldn’t rename that type. Existing placeholders were left unchanged.",
+      };
+    }
+
+    const previousId = type.id;
+    type.id = nextId;
+
+    try {
+      await this.deps.saveSettings();
+    } catch (error) {
+      type.id = previousId;
+      await this.restoreTypeReferences(rewritten);
+
+      this.deps.errors.reportBackground(
+        ERROR_CODES.SETTINGS_SAVE,
+        "Failed to save a renamed placeholder type; restored the previous type ID and placeholder references.",
+        error,
+        { oldId, nextId },
+      );
+
+      return {
+        ok: false,
+        message: "Couldn’t save that type rename. The previous type ID was restored.",
+      };
+    }
+
+    this.refreshTypePresentationSafely();
+    return { ok: true };
+  }
+
   async setTypeName(typeId: string, value: string): Promise<SettingsMutationResult> {
     const type = this.findType(typeId);
     if (!type) return { ok: true };
@@ -73,6 +158,14 @@ export class PlaceholderSettingsMutations {
   }
 
   async setTypeColor(typeId: string, value: string): Promise<SettingsMutationResult> {
+    const normalized = value.trim().toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(normalized)) {
+      return {
+        ok: false,
+        message: "Colors must use six-digit hex notation, for example #7c7c7c.",
+      };
+    }
+
     const type = this.findType(typeId);
     if (!type || type.color === value) return { ok: true };
     const previous = type.color;
@@ -110,19 +203,144 @@ export class PlaceholderSettingsMutations {
     );
   }
 
-  async deleteType(typeId: string): Promise<SettingsMutationResult> {
-    if (typeId === "general") {
-      return { ok: false, message: "General is the permanent default placeholder type and cannot be deleted." };
+  async deleteType(id: string): Promise<SettingsMutationResult> {
+    if (id === "general") {
+      return {
+        ok: false,
+        message: "General is the required fallback type and cannot be deleted.",
+      };
     }
-    const index = this.deps.settings.types.findIndex((type) => type.id === typeId);
+
+    const index = this.deps.settings.types.findIndex((type) => type.id === id);
     if (index < 0) return { ok: true };
 
-    const [removed] = this.deps.settings.types.splice(index, 1);
-    if (!removed) return { ok: true };
-    return this.saveOrRollback(
-      () => { this.deps.settings.types.splice(index, 0, removed); },
-      () => this.refreshTypePresentation(),
-    );
+    const type = this.deps.settings.types[index];
+    if (!type) return { ok: true };
+
+    let rewritten: TypeReferenceRewrite[] = [];
+
+    try {
+      rewritten = await this.rewriteTypeReferences(id, "general");
+    } catch (error) {
+      this.deps.errors.reportBackground(
+        ERROR_CODES.SETTINGS_SAVE,
+        "Couldn’t delete the placeholder type because existing placeholders could not be migrated to general.",
+        error,
+        { typeId: id },
+      );
+
+      return {
+        ok: false,
+        message: "Couldn’t delete that type. Existing placeholders were left unchanged.",
+      };
+    }
+
+    this.deps.settings.types.splice(index, 1);
+
+    try {
+      await this.deps.saveSettings();
+    } catch (error) {
+      this.deps.settings.types.splice(index, 0, type);
+      await this.restoreTypeReferences(rewritten);
+
+      this.deps.errors.reportBackground(
+        ERROR_CODES.SETTINGS_SAVE,
+        "Failed to save a deleted placeholder type; restored the type and its placeholder references.",
+        error,
+        { typeId: id },
+      );
+
+      return {
+        ok: false,
+        message: "Couldn’t delete that type. The previous type and placeholder references were restored.",
+      };
+    }
+
+    this.refreshTypePresentationSafely();
+    return { ok: true };
+  }
+
+  private async rewriteTypeReferences(
+    oldId: string,
+    nextId: string,
+  ): Promise<TypeReferenceRewrite[]> {
+    const app = this.deps.app;
+    if (!app || oldId === nextId) return [];
+
+    const rewritten: TypeReferenceRewrite[] = [];
+
+    try {
+      for (const file of app.vault.getMarkdownFiles()) {
+        const source = await app.vault.cachedRead(file);
+        const matching = parsePlaceholders(source, file.path)
+          .filter((record) => record.type === oldId);
+
+        if (matching.length === 0) continue;
+
+        let nextSource = source;
+
+        for (let index = matching.length - 1; index >= 0; index -= 1) {
+          const record = matching[index];
+          if (!record) continue;
+
+          const replacement = formatPlaceholder({
+            text: record.text,
+            type: nextId,
+            priority: record.priority,
+          });
+
+          nextSource =
+            nextSource.slice(0, record.start) +
+            replacement +
+            nextSource.slice(record.end);
+        }
+
+        if (nextSource === source) continue;
+
+        await app.vault.modify(file, nextSource);
+        rewritten.push({ file, source });
+      }
+
+      return rewritten;
+    } catch (error) {
+      await this.restoreTypeReferences(rewritten);
+      throw error;
+    }
+  }
+
+  private async restoreTypeReferences(
+    rewritten: readonly TypeReferenceRewrite[],
+  ): Promise<void> {
+    const app = this.deps.app;
+    if (!app || rewritten.length === 0) return;
+
+    for (let index = rewritten.length - 1; index >= 0; index -= 1) {
+      const entry = rewritten[index];
+      if (!entry) continue;
+
+      try {
+        await app.vault.modify(entry.file, entry.source);
+      } catch (error) {
+        this.deps.errors.reportBackground(
+          ERROR_CODES.SETTINGS_SAVE,
+          "Failed to restore a note while rolling back a placeholder type migration.",
+          error,
+          { path: entry.file.path },
+        );
+      }
+    }
+  }
+
+  private refreshTypePresentationSafely(): void {
+    try {
+      this.refreshTypePresentation();
+    } catch (error) {
+      this.deps.errors.reportBackground(
+        ERROR_CODES.SETTINGS_REFRESH,
+        "Placeholder settings were saved, but a dependent view failed to refresh.",
+        error,
+      );
+    }
   }
 
   private async saveOrRollback(
