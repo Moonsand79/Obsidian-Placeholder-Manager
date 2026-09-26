@@ -144,5 +144,5 @@ test("production esbuild explicitly disables development assertions", () => {
 test("index code does not swallow development invariant violations", () => {
   const root = process.env.PLACEHOLDER_TEST_SOURCE_ROOT ?? process.cwd();
   const source = fs.readFileSync(path.join(root, "src", "index", "placeholder-index.ts"), "utf8");
-  assert.match(source, /BUILD_ASSERTIONS_ENABLED\s*&&\s*error\s+instanceof\s+InvariantViolationError/);
+  assert.match(source, /__PLACEHOLDER_DEV_ASSERTIONS__\)\s*&&\s*error\s+instanceof\s+InvariantViolationError/);
 });

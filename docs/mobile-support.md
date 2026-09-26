@@ -74,4 +74,4 @@ Automated tests cannot reproduce Android WebView lifecycle, keyboard resizing, O
 13. Disable/re-enable or reload the plugin and confirm no duplicate sidebar view/listeners remain.
 14. Inspect the Android WebView with Chromium remote DevTools if any blank view, keyboard jump, or long task appears.
 
-Record device model, Android version, Obsidian version, vault size, and any observed long task or crash. The final release checklist requires this real-device run because automated tests do not reproduce every Android WebView, keyboard, memory-pressure, or process-restoration behavior.
+Record device model, Android version, Obsidian version, vault size, and any observed long task/crash. Phase 18's final release checklist requires this real-device run; Phase 15 provides the code, automation, budgets, and checklist but does not fabricate a device result in environments where no Android WebView is available.

@@ -6,13 +6,7 @@ import type {
   Priority,
 } from "../types";
 import { findMarkdownExclusionRanges } from "../markdown/source-exclusions";
-import { PlaceholderSyntaxScanner } from "./scanner";
-
-declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
-const BUILD_ASSERTIONS_ENABLED =
-  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
-    ? __PLACEHOLDER_DEV_ASSERTIONS__
-    : true;
+import { PLACEHOLDER_OPENER, PlaceholderSyntaxScanner, isEscapedAt } from "./scanner";
 
 export const PRIORITIES: ReadonlySet<Priority> = new Set(["low", "normal", "high"]);
 const TYPE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
@@ -116,7 +110,7 @@ export function parsePlaceholders(
     candidate = scanner.next();
   }
 
-  if (BUILD_ASSERTIONS_ENABLED) {
+  if ((typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "undefined" || __PLACEHOLDER_DEV_ASSERTIONS__)) {
     assertPlaceholderRecordListInvariants(results, { source: text, filePath });
   }
   return results;
@@ -165,6 +159,45 @@ function lineNumberAtOffset(lineStarts: number[], offset: number): number {
     else high = mid - 1;
   }
   return high + 1;
+}
+
+
+/**
+ * Returns the source range occupied by the first (visible text) field of a
+ * parsed placeholder. The range excludes the opener, metadata fields, closing
+ * delimiter, and surrounding field whitespace while preserving the Markdown
+ * source itself. Live Preview uses this to hide syntax without replacing the
+ * actual placeholder text with an opaque widget.
+ */
+export function getPlaceholderTextSourceRange(
+  placeholder: Pick<PlaceholderRecord, "raw" | "start" | "end">,
+): { start: number; end: number } | null {
+  const raw = placeholder.raw;
+  if (raw.length !== placeholder.end - placeholder.start) return null;
+  if (raw.slice(0, PLACEHOLDER_OPENER.length).toLowerCase() !== PLACEHOLDER_OPENER) return null;
+  if (!raw.endsWith("}}")) return null;
+
+  const contentStart = PLACEHOLDER_OPENER.length;
+  const closeStart = raw.length - 2;
+  let fieldEnd = closeStart;
+
+  for (let offset = contentStart; offset < closeStart; offset += 1) {
+    if (raw[offset] === "|" && !isEscapedAt(raw, offset)) {
+      fieldEnd = offset;
+      break;
+    }
+  }
+
+  let textStart = contentStart;
+  while (textStart < fieldEnd && /\s/u.test(raw[textStart] ?? "")) textStart += 1;
+
+  let textEnd = fieldEnd;
+  while (textEnd > textStart && /\s/u.test(raw[textEnd - 1] ?? "")) textEnd -= 1;
+
+  return {
+    start: placeholder.start + textStart,
+    end: placeholder.start + textEnd,
+  };
 }
 
 export function formatPlaceholder(value: PlaceholderInput): string {

@@ -2,12 +2,6 @@ import { assertSettingsInvariants } from "../dev-invariants";
 import { sanitizeTypeId } from "../parser/parser";
 import type { PlaceholderSettings, PlaceholderType } from "../types";
 
-declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
-const BUILD_ASSERTIONS_ENABLED =
-  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
-    ? __PLACEHOLDER_DEV_ASSERTIONS__
-    : true;
-
 export const SETTINGS_SCHEMA_VERSION = 1 as const;
 
 export interface PersistedSettingsV1 {
@@ -158,7 +152,7 @@ export function normalizeSettings(data: unknown): PlaceholderSettings {
       types: types.length > 0 ? types : cloneDefaultTypes(),
     };
 
-  if (BUILD_ASSERTIONS_ENABLED) assertSettingsInvariants(normalized);
+  if ((typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "undefined" || __PLACEHOLDER_DEV_ASSERTIONS__)) assertSettingsInvariants(normalized);
   return normalized;
 }
 

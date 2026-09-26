@@ -1,6 +1,5 @@
 import esbuild from "esbuild";
 import process from "node:process";
-import path from "node:path";
 import { builtinModules } from "node:module";
 
 const banner = `/*
@@ -9,26 +8,9 @@ Source lives in the src/ directory of the Placeholder Manager repository.
 */`;
 
 const prod = process.argv[2] === "production";
-
-const productionPlugins = prod
-  ? [
-      {
-        name: "strip-development-invariants",
-        setup(build) {
-          build.onResolve(
-            { filter: /dev-invariants$/ },
-            () => ({
-              path: path.resolve("src/dev-invariants.production.ts"),
-            }),
-          );
-        },
-      },
-    ]
-  : [];
 const context = await esbuild.context({
   banner: { js: banner },
   entryPoints: ["src/main.ts"],
-  plugins: productionPlugins,
   bundle: true,
   external: [
     "obsidian",

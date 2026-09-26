@@ -1,6 +1,6 @@
 # Performance benchmarks and budgets
 
-Placeholder Manager uses deterministic synthetic workloads and explicit regression budgets for parser, index, event-loop, and sidebar performance. These numbers are engineering gates for the reference CI/runtime class; they are **not** promises that every phone, tablet, vault, or third-party theme will complete the same work in the same wall-clock time. Mobile-policy workloads and the real-device checklist complement these CI measurements.
+Phase 11 replaces informal performance impressions with deterministic synthetic workloads and explicit regression budgets. These numbers are engineering gates for the desktop CI/runtime class used by the project; they are **not** promises that every phone, tablet, vault, or third-party theme will complete the same work in the same wall-clock time. Phase 15 adds mobile-policy surrogate budgets and a real-device validation checklist; CI timing remains a reference-runtime regression signal rather than a phone-speed promise.
 
 ## Commands
 
@@ -19,7 +19,7 @@ Fixtures are deterministic. Each timing case performs warm-up iterations, then m
 
 The suite prints the Node version, platform, architecture, measured median/p95, and the configured budget. Volatile benchmark results are not committed to the repository; the fixtures and budgets are.
 
-## Benchmark workloads
+## Phase 11 workloads
 
 | ID | Workload | Median budget | p95 budget |
 |---|---|---:|---:|
@@ -35,11 +35,11 @@ The suite prints the Node version, platform, architecture, measured median/p95, 
 | `sidebar.filter.10k` | Search/filter/sort 10,000 indexed records | 20 ms | 35 ms |
 | `sidebar.filter.50k` | Search/filter/sort 50,000 indexed records | 80 ms | 130 ms |
 
-The budgets deliberately have substantial headroom over the reference measurements. Their purpose is to detect material regressions, not normal CI noise or single-digit-millisecond variation.
+The budgets deliberately have substantial headroom over the Phase 11 reference measurements. Their purpose is to detect material regressions, not normal CI noise or single-digit-millisecond variation.
 
-## Reference measurements
+## Reference measurements from Phase 11
 
-On the reference runtime used when these budgets were established (Node 22.16.0, Linux x64), the suite measured approximately:
+On the Phase 11 sandbox reference runtime (Node 22.16.0, Linux x64), the suite measured approximately:
 
 | ID | Median | p95 |
 |---|---:|---:|
@@ -55,9 +55,9 @@ On the reference runtime used when these budgets were established (Node 22.16.0,
 
 These figures are retained as evidence for how the initial budgets were chosen. Future budget changes require a documented reason and fresh benchmark evidence; they should not simply be loosened to make a regression green.
 
-## Mobile-policy reference measurements
+## Phase 15 mobile-policy reference measurements
 
-On the same reference runtime:
+On the same reference runtime after Phase 15:
 
 | ID | Median | p95 |
 |---|---:|---:|
@@ -70,8 +70,8 @@ The mobile cases exercise the smaller batch/yield policy on CI hardware. They do
 
 Total startup throughput alone is insufficient. The full index intentionally yields between batches. `index.yield-gap.500x50k` runs a timer concurrently with the scan and records the largest gap between timer opportunities for each sample. This guards against an optimization that improves total scan time by making each uninterrupted batch much longer.
 
-This remains a synthetic proxy rather than a mobile wall-clock guarantee. The suite includes the mobile 8-file batch workload, while actual Android behavior is covered by the real-device smoke protocol before release.
+This remains a synthetic proxy rather than a mobile wall-clock guarantee. Phase 15 adds the mobile 8-file batch workload and a real-device smoke protocol; actual Android measurements must be recorded before public release.
 
 ## Sidebar scope
 
-The sidebar benchmark measures the pure record-selection path—type filtering, case-insensitive search across text/type/path, and deterministic path/offset sorting. It deliberately excludes DOM row creation because fake-DOM timing does not predict real WebView rendering cost. Mobile DOM rendering is bounded to 100 rows per chunk, while actual WebView rendering and keyboard behavior are covered by the device smoke checklist.
+The Phase 11 sidebar benchmark measures the pure record-selection path—type filtering, case-insensitive search across text/type/path, and deterministic path/offset sorting. It deliberately excludes DOM row creation because fake-DOM timing does not predict real WebView rendering cost. Phase 15 bounds mobile DOM rendering to 100 rows per chunk and assigns real WebView rendering/keyboard checks to the device smoke checklist; Phase 11 continues to protect the algorithmic data-selection path.

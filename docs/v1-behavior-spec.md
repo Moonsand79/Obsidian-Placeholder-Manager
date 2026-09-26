@@ -1,8 +1,8 @@
 # Placeholder Manager V1 Behavior Specification
 
-Status: **Normative V1 contract**  
-Specification version: **1.0.0**  
-Applies to: **Placeholder Manager V1**
+Status: **Normative target for the post-0.1.2 V1 codebase**
+Specification version: **1.0.0-draft.2**
+Product version currently measured against this spec: **0.1.2 beta**
 
 This document defines what Placeholder Manager V1 is supposed to do. Later implementation work must conform to this document unless the specification is deliberately amended first. Tests should cite requirement IDs from this document wherever practical.
 
@@ -24,7 +24,7 @@ The plugin MUST NOT modify note contents except in response to an explicit user 
 Core placeholder management MUST work without network access. V1 MUST NOT transmit note content to external services.
 
 ### PB-004 — V1 non-goals
-V1 does not include stable placeholder IDs, linked placeholders, variables, resolve-all, placeholder history, project-wide sequential navigation, or a collapsed editor widget that hides the raw syntax.
+V1 does not include stable placeholder IDs, linked placeholders, variables, resolve-all, placeholder history, project-wide sequential navigation, or opaque editor widgets that replace the placeholder text itself.
 
 ## 2. Canonical syntax
 
@@ -358,8 +358,8 @@ The manager MUST distinguish “index still building” from “index complete a
 
 ## 13. Editor decorations
 
-### ED-001 — Raw syntax remains visible
-V1 editor styling MUST decorate the raw placeholder syntax rather than replacing it with an opaque widget.
+### ED-001 — Contextual source syntax
+In Live Preview, an inactive placeholder MUST hide its structural syntax (`{{ph:`, metadata fields, and `}}`) while keeping the placeholder text visible as real document text. When a cursor or selection touches that placeholder, the complete raw syntax MUST be revealed. Source mode remains unchanged.
 
 ### ED-002 — Semantic appearance
 Configured types, unknown types, and priority classes MAY affect appearance, but presentation MUST NOT alter source text.
@@ -368,7 +368,10 @@ Configured types, unknown types, and priority classes MAY affect appearance, but
 Editor decorations MUST follow section 4 exclusions.
 
 ### ED-004 — Targeted recomputation
-Cursor movement alone SHOULD NOT trigger a full-document placeholder parse. Recalculation SHOULD occur for document changes, relevant configuration changes, and viewport changes only when needed.
+Cursor movement MAY rebuild editor decorations so the active placeholder can reveal its syntax, but MUST NOT trigger a full-document placeholder parse. Parsing SHOULD occur for document changes; presentation-only recomputation MAY occur for selection, relevant configuration, and viewport changes.
+
+### ED-005 — Editable text remains document text
+The collapsed Live Preview presentation MUST NOT replace the semantic placeholder text with an opaque widget. Clicking or selecting the visible placeholder text MUST place the editor selection inside the underlying placeholder source so the full syntax can be revealed for editing.
 
 ## 14. Reading View
 
@@ -436,7 +439,7 @@ Plugin startup MUST avoid a long synchronous full-vault parse before the UI is u
 ### PERF-005 — Baseline budgets
 The project MUST maintain deterministic performance benchmarks with explicit median and p95 budgets for parser throughput, Markdown exclusion scanning, single-file indexing, full-vault indexing, startup event-loop yielding, and sidebar record filtering. The authoritative workloads and current thresholds are defined in `docs/performance-budgets.md`.
 
-The parser performance targets are: 100k-character prose parsing <= 20 ms median and 500k-character prose parsing <= 75 ms median on the desktop reference runtime. Performance thresholds are engineering regression budgets, not user-facing guarantees, and MAY be revised only with documented benchmark evidence.
+The initial parser targets remain at least as strict as the Phase 1 goals: 100k-character prose parsing <= 20 ms median and 500k-character prose parsing <= 75 ms median on the desktop reference runtime. Performance thresholds are engineering regression budgets, not user-facing guarantees, and MAY be revised only with documented benchmark evidence.
 
 ### PERF-006 — Mobile compatibility gate
 While V1 advertises `isDesktopOnly: false`, production source MUST remain free of unguarded Node/Electron runtime imports, desktop `FileSystemAdapter` assumptions, `process.platform`/user-agent platform detection, and regex lookbehind. Release validation MUST enforce this source-level compatibility contract.
@@ -531,4 +534,4 @@ The V1 behavior freeze is satisfied only when:
 4. The actual shipped ZIP is smoke-tested separately from source/build tests.
 5. Desktop and Android smoke tests cover insert, edit, resolve, delete, navigation, manager opening, settings opening, Reading View toggling, plugin reload, and a large note.
 
-Changes to these contracts require editing this specification first and recording the reason in the repository history.
+Changes to these contracts after Phase 1 require editing this specification first and recording the reason in the repository history.

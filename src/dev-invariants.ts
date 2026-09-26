@@ -1,6 +1,6 @@
 import type { PlaceholderRecord, PlaceholderSettings, Priority } from "./types";
 
-const VALID_PRIORITIES: ReadonlySet<Priority> = new Set(["low", "normal", "high"]);
+const VALID_PRIORITIES: readonly Priority[] = ["low", "normal", "high"];
 const TYPE_ID_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
 /**
@@ -67,7 +67,7 @@ export function assertPlaceholderRecordInvariants(
     Number.isInteger(record.start) && Number.isInteger(record.end) && record.start >= 0 && record.end > record.start,
     `invalid half-open range [${record.start}, ${record.end})`,
   );
-  assertInvariant("INV-007", VALID_PRIORITIES.has(record.priority), `invalid priority ${JSON.stringify(record.priority)}`);
+  assertInvariant("INV-007", VALID_PRIORITIES.includes(record.priority), `invalid priority ${JSON.stringify(record.priority)}`);
   assertInvariant("INV-007", TYPE_ID_PATTERN.test(record.type), `invalid type ID ${JSON.stringify(record.type)}`);
   assertInvariant("INV-007", Number.isInteger(record.line) && record.line >= 1, `invalid line number ${record.line}`);
   assertInvariant(

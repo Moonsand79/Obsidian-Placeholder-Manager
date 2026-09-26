@@ -44,7 +44,6 @@ export class PlaceholderUiController {
       deps.errors,
     );
     this.settingsMutations = new PlaceholderSettingsMutations({
-      app: this.deps.app,
       settings: deps.getSettings(),
       saveSettings: deps.saveSettings,
       refreshOpenManagerViews: () => this.refreshOpenManagerViews(),

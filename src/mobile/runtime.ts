@@ -6,7 +6,7 @@ export interface PlaceholderRuntimePlatform {
   isIos: boolean;
 }
 
-export const DESKTOP_INITIAL_SCAN_BATCH_SIZE = 8;
+export const DESKTOP_INITIAL_SCAN_BATCH_SIZE = 20;
 export const MOBILE_INITIAL_SCAN_BATCH_SIZE = 8;
 export const DESKTOP_MANAGER_RENDER_CHUNK = 500;
 export const MOBILE_MANAGER_RENDER_CHUNK = 100;

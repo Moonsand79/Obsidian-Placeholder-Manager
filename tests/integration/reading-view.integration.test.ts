@@ -42,6 +42,7 @@ test("integration Reading View: source-valid rendered placeholder becomes a toke
   assert.equal(token.dataset.placeholderType, "research");
   assert.equal(token.querySelector(".placeholder-manager-reading-badge")?.textContent, "Research");
   assert.equal(token.querySelector(".placeholder-manager-reading-text")?.textContent, "citation");
+  assert.equal(token.querySelector(".placeholder-manager-reading-raw")?.textContent, "{{ph: citation | research | high}}");
   assert.equal(preview.classList.contains("placeholder-manager-reading-enabled"), true);
 
   controller.restorePreviewRoot(preview);

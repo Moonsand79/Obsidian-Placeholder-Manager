@@ -22,7 +22,7 @@ A startup failure is logged and shown once to the user, then rethrown so Obsidia
 
 ### Development invariant violations
 
-`InvariantViolationError` is not downgraded into a recoverable production-style error while development assertions are enabled. Error boundaries that would otherwise consume the failure log it and surface it asynchronously so impossible internal states still fail loudly. Startup is the exception: `onload()` already rethrows after reporting, so the reporter does not schedule a duplicate assertion exception there. Production bundles compile development invariant machinery out.
+`InvariantViolationError` is not downgraded into a recoverable production-style error while development assertions are enabled. Error boundaries that would otherwise consume the failure log it and surface it asynchronously so impossible internal states still fail loudly. Startup is the exception: `onload()` already rethrows after reporting, so the reporter does not schedule a duplicate assertion exception there. Production bundles compile invariant machinery out under the Phase 13 contract.
 
 ## Stable diagnostic codes
 

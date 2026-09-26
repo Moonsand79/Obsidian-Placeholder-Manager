@@ -1,6 +1,6 @@
 # Internal invariant policy
 
-Placeholder Manager encodes important internal assumptions as executable development contracts. These assertions catch programmer errors close to the boundary that created them; they are not a second parser, a substitute for user-input validation, or a production error-handling mechanism.
+Phase 13 turns Placeholder Manager's internal assumptions into executable development contracts. These assertions exist to catch programmer errors close to the boundary that created them; they are not a second parser, a substitute for user-input validation, or a production error-handling mechanism.
 
 ## Build policy
 

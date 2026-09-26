@@ -41,6 +41,7 @@ export default class PlaceholderManagerPlugin extends Plugin {
       const runtimePlatform = detectRuntimePlatform();
       this.createSubsystems(runtimePlatform);
       this.registerSubsystems();
+
       this.registerLayoutReadyStartup();
     } catch (error) {
       this.errors.reportStartup(ERROR_CODES.STARTUP, startupMessage(error), error);

@@ -49,7 +49,28 @@ function withExternalStubs(callback) {
   Module._load = function patched(request, parent, isMain) {
     if (request === "obsidian") return makeObsidianStub();
     if (request === "@codemirror/view") {
-      return { Decoration: { mark() { return {}; } }, ViewPlugin: { fromClass() { return {}; } } };
+      return {
+        Decoration: {
+          none: [],
+          mark() { return {}; },
+          replace() { return {}; },
+        },
+        EditorView: {
+          atomicRanges: {
+            of(provider) { return { provider }; },
+          },
+          inputHandler: {
+            of(handler) { return { handler }; },
+          },
+        },
+        ViewPlugin: { fromClass() { return {}; } },
+        WidgetType: class {
+          eq() { return false; }
+          updateDOM() { return false; }
+          ignoreEvent() { return true; }
+          destroy() {}
+        },
+      };
     }
     if (request === "@codemirror/state") {
       return {
@@ -100,13 +121,9 @@ function loadBundle() {
   fs.writeFileSync(tempPath, bundleText);
   delete require.cache[tempPath];
   try {
-    return {
-      PluginClass: withExternalStubs(() => {
-        const loaded = require(tempPath);
-        return loaded?.default ?? loaded;
-      }),
-      bundleText,
-    };
+    const loaded = withExternalStubs(() => require(tempPath));
+    const PluginClass = loaded?.default ?? loaded;
+    return { PluginClass, bundleText };
   } finally {
     delete require.cache[tempPath];
     fs.rmSync(tempPath, { force: true });

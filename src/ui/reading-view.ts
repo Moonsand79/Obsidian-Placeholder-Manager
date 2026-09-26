@@ -46,9 +46,19 @@ export class PlaceholderReadingViewController {
   }
 
   processRenderedSection(root: HTMLElement, context?: MarkdownPostProcessorContext): void {
+    // Postprocessor sections may be processed before they are attached beneath
+    // the final preview root, especially on mobile. Keep the enabled state on
+    // the section itself as well as the eventual preview root.
+    root.classList.toggle(
+      "placeholder-manager-reading-enabled",
+      this.getSettings().enableReadingView,
+    );
+
     const previewRoot = root.closest<HTMLElement>(".markdown-preview-view")
       ?? (root.matches(".markdown-preview-view") ? root : null);
-    if (previewRoot) this.syncEnabledClass(previewRoot);
+
+    if (previewRoot && previewRoot !== root) this.syncEnabledClass(previewRoot);
+
     if (isReadingViewExcludedElement(root) || root.closest(".placeholder-manager-reading-token")) return;
 
     const renderedCandidates = this.collectRenderedCandidates(root);
@@ -66,7 +76,10 @@ export class PlaceholderReadingViewController {
         candidate: renderedCandidates[index] as RenderedPlaceholderCandidate,
         semantic,
       })) ?? [])
-      : renderedCandidates.map((candidate) => ({ candidate, semantic: candidate.placeholder }));
+      : renderedCandidates.map((candidate) => ({
+        candidate,
+        semantic: candidate.placeholder,
+      }));
 
     // Work backwards so DOM Range mutations cannot invalidate boundaries that
     // belong to an earlier candidate in the same rendered text run.
@@ -203,7 +216,10 @@ export class PlaceholderReadingViewController {
     candidate: RenderedPlaceholderCandidate,
     semantic: PlaceholderRecord,
   ): void {
-    if (!candidate.startNode.isConnected || !candidate.endNode.isConnected) return;
+    // Markdown postprocessors may run while their rendered section is still
+    // detached from the document. Detached text nodes are valid Range
+    // boundaries as long as they still belong to a DOM tree.
+    if (!candidate.startNode.parentNode || !candidate.endNode.parentNode) return;
     const range = document.createRange();
     range.setStart(candidate.startNode, candidate.startOffset);
     range.setEnd(candidate.endNode, candidate.endOffset);

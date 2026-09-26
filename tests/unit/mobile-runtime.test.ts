@@ -12,11 +12,10 @@ import {
 const desktop = { isMobile: false, isAndroid: false, isIos: false };
 const android = { isMobile: true, isAndroid: true, isIos: false };
 
-test("mobile runtime: startup indexing uses the configured yielded batch size", () => {
+test("mobile runtime: startup indexing uses a smaller yielded batch on mobile", () => {
   assert.equal(initialScanBatchSize(desktop), DESKTOP_INITIAL_SCAN_BATCH_SIZE);
   assert.equal(initialScanBatchSize(android), MOBILE_INITIAL_SCAN_BATCH_SIZE);
-  assert.equal(MOBILE_INITIAL_SCAN_BATCH_SIZE, 8);
-  assert.equal(DESKTOP_INITIAL_SCAN_BATCH_SIZE, 8);
+  assert.ok(MOBILE_INITIAL_SCAN_BATCH_SIZE < DESKTOP_INITIAL_SCAN_BATCH_SIZE);
 });
 
 test("mobile runtime: manager DOM rendering is bounded more aggressively on mobile", () => {

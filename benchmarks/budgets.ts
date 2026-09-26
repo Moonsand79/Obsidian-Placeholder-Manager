@@ -5,9 +5,9 @@ export interface PerformanceBudget {
 }
 
 /**
- * CI budgets intentionally leave substantial headroom over the reference
- * measurements. They are regression tripwires, not claims about all end-user
- * hardware. Mobile-specific workloads have separate targets.
+ * CI budgets intentionally leave substantial headroom over the Phase 11
+ * reference measurements. They are regression tripwires, not claims about all
+ * end-user hardware; Phase 15 adds mobile-specific targets.
  */
 export const PERFORMANCE_BUDGETS: Readonly<Record<string, PerformanceBudget>> = {
   "parser.prose.100k": {

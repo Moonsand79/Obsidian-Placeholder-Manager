@@ -1,6 +1,6 @@
 # Code readability and internal API conventions
 
-This document defines naming and organization conventions intended to keep feature work explicit, local, and maintainable as the plugin grows.
+Phase 16 freezes a small set of naming and organization conventions so later feature work does not recreate the ambiguous, cross-cutting APIs removed during hardening.
 
 ## Naming rules
 
@@ -55,13 +55,12 @@ Prefer names and types over comments. Keep comments when they explain one of the
 
 Do not narrate straightforward code line by line.
 
+## Obsidian base-class names
+
+Subclass state must not reuse names already owned by Obsidian base classes. In particular, `ItemView` inherits `scope`, so Placeholder Manager's sidebar filter state is named `placeholderScope`. Test doubles for Obsidian abstract classes should subclass the real API class and implement its abstract surface instead of relying on structural `implements` declarations that can drift from the installed API.
+
 ## Guardrail
 
 `npm run check:readability` checks the most important retired ambiguous APIs and the main orchestration seams. It is intentionally narrow rather than a style linter: ESLint remains responsible for general syntax/style rules, while this check protects decisions that are specific to Placeholder Manager's internal API.
 
 The readability check runs inside `npm run release:check`.
-
-
-## Architecture relationship
-
-Naming and method decomposition are local readability rules. Cross-subsystem ownership, dependency direction, lifecycle, cache invalidation, and extension-point decisions belong in `docs/architecture.md`. If a readability refactor changes one of those architectural facts, update the architecture document in the same change.

@@ -25,19 +25,10 @@ test("SET-003: settings refresh path does not call workspace.updateOptions", () 
   assert.equal(/\brefreshStyling\b/.test(executableSource), false);
 });
 
-test("TYPE-004: general ID is locked and other type IDs mutate through settings mutations", () => {
+test("TYPE-004: existing type ID fields are disabled and no UI code assigns type.id", () => {
   const settingsTab = read("ui/settings-tab.ts");
   const mutations = read("ui/settings-mutations.ts");
-  const executableTab = stripComments(settingsTab);
-  const executableMutations = stripComments(mutations);
-
-  assert.equal(settingsTab.includes('.setDisabled(isGeneral)'), true);
-  assert.equal(settingsTab.includes('const isGeneral = type.id === "general"'), true);
-  assert.equal(settingsTab.includes("this.deps.mutations.setTypeId("), true);
-  assert.equal(/\btype\.id\s*=(?!=)/.test(executableTab), false);
-
-  assert.equal(mutations.includes('if (oldId === "general")'), true);
-  assert.equal(mutations.includes("type.id = nextId"), true);
-  assert.equal(mutations.includes("type.id = previousId"), true);
-  assert.equal(/async setTypeId\(/.test(executableMutations), true);
+  assert.equal(settingsTab.includes(".setDisabled(true)"), true);
+  assert.equal(/\btype\.id\s*=(?!=)/.test(stripComments(settingsTab)), false);
+  assert.equal(/\btype\.id\s*=(?!=)/.test(stripComments(mutations)), false);
 });

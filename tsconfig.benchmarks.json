@@ -13,7 +13,8 @@
     "esModuleInterop": true
   },
   "include": [
-    "benchmarks/**/*.ts"
+    "benchmarks/**/*.ts",
+    "src/build-flags.d.ts"
   ],
   "exclude": [
     "node_modules",

@@ -22,12 +22,12 @@ export default defineConfig(
     "benchmarks/**",
     ".test-build",
     ".benchmark-build",
-    "dist/**",
   ]),
   {
     languageOptions: {
       globals: {
         ...globals.browser,
+        __PLACEHOLDER_DEV_ASSERTIONS__: "readonly",
       },
       parserOptions: {
         projectService: true,

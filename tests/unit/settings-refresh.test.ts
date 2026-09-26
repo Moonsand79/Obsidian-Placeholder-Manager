@@ -1,14 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TFile } from "obsidian";
 import { KeyedDebouncer, PlaceholderSettingsMutations } from "../../src/ui/settings-mutations";
 import type { PlaceholderSettings } from "../../src/types";
-import { createTestApp, RecordingErrorReporter } from "../harness/fakes";
-
-function makeFile(path: string): TFile {
-  const Ctor = TFile as unknown as new (path: string) => TFile;
-  return new Ctor(path);
-}
+import { RecordingErrorReporter } from "../harness/fakes";
 
 function makeHarness() {
   const settings: PlaceholderSettings = {
@@ -98,124 +92,6 @@ test("TYPE-001/005: general cannot be deleted; custom type deletion is presentat
   assert.equal((await mutations.deleteType("research")).ok, true);
   assert.deepEqual(settings.types.map((type) => type.id), ["general"]);
   assert.deepEqual(calls, ["save", "manager", "editor", "reading-appearance"]);
-});
-
-test("TYPE-004: renaming a type migrates existing placeholder references", async () => {
-  const harness = createTestApp();
-  const file = makeFile("Chapter.md");
-
-  harness.vault.addFile(
-    file,
-    [
-      "Before.",
-      "{{ph: Find shark source | research}}",
-      "{{ph: Check date | research | high}}",
-      "{{ph: Leave this alone | general}}",
-      "After.",
-    ].join("\n"),
-  );
-
-  const settings: PlaceholderSettings = {
-    projectProperty: "work",
-    enableReadingView: true,
-    types: [
-      { id: "general", name: "General", color: "#7c7c7c" },
-      { id: "research", name: "Research", color: "#4d8f6f" },
-    ],
-  };
-
-  const calls: string[] = [];
-  const mutations = new PlaceholderSettingsMutations({
-    app: harness.app,
-    settings,
-    saveSettings: async () => { calls.push("save"); },
-    refreshOpenManagerViews: () => { calls.push("manager"); },
-    refreshEditorAppearance: () => { calls.push("editor"); },
-    refreshReadingAppearance: () => { calls.push("reading-appearance"); },
-    updateReadingEnabledClass: () => {},
-    errors: new RecordingErrorReporter(),
-  });
-
-  const result = await mutations.setTypeId("research", "sources");
-
-  assert.equal(result.ok, true);
-  assert.deepEqual(
-    settings.types.map((type) => type.id),
-    ["general", "sources"],
-  );
-
-  assert.equal(
-    harness.vault.contents.get(file.path),
-    [
-      "Before.",
-      "{{ph: Find shark source | sources}}",
-      "{{ph: Check date | sources | high}}",
-      "{{ph: Leave this alone | general}}",
-      "After.",
-    ].join("\n"),
-  );
-
-  assert.deepEqual(
-    calls,
-    ["save", "manager", "editor", "reading-appearance"],
-  );
-});
-
-test("TYPE-005: deleting a type migrates its placeholders to general", async () => {
-  const harness = createTestApp();
-  const file = makeFile("Chapter.md");
-
-  harness.vault.addFile(
-    file,
-    [
-      "{{ph: Ordinary source | research}}",
-      "{{ph: Important source | research | high}}",
-      "{{ph: Existing general}}",
-    ].join("\n"),
-  );
-
-  const settings: PlaceholderSettings = {
-    projectProperty: "work",
-    enableReadingView: true,
-    types: [
-      { id: "general", name: "General", color: "#7c7c7c" },
-      { id: "research", name: "Research", color: "#4d8f6f" },
-    ],
-  };
-
-  const calls: string[] = [];
-  const mutations = new PlaceholderSettingsMutations({
-    app: harness.app,
-    settings,
-    saveSettings: async () => { calls.push("save"); },
-    refreshOpenManagerViews: () => { calls.push("manager"); },
-    refreshEditorAppearance: () => { calls.push("editor"); },
-    refreshReadingAppearance: () => { calls.push("reading-appearance"); },
-    updateReadingEnabledClass: () => {},
-    errors: new RecordingErrorReporter(),
-  });
-
-  const result = await mutations.deleteType("research");
-
-  assert.equal(result.ok, true);
-  assert.deepEqual(
-    settings.types.map((type) => type.id),
-    ["general"],
-  );
-
-  assert.equal(
-    harness.vault.contents.get(file.path),
-    [
-      "{{ph: Ordinary source}}",
-      "{{ph: Important source | general | high}}",
-      "{{ph: Existing general}}",
-    ].join("\n"),
-  );
-
-  assert.deepEqual(
-    calls,
-    ["save", "manager", "editor", "reading-appearance"],
-  );
 });
 
 test("SET-004: keyed debounce collapses a burst without dropping another setting key", async () => {

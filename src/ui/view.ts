@@ -1,4 +1,4 @@
-import { ItemView, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownView, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
 import { ERROR_CODES, type PlaceholderErrorReporter } from "../errors/error-reporter";
 import type { PlaceholderIndex } from "../index/placeholder-index";
 import { managerRenderChunkSize, type PlaceholderRuntimePlatform } from "../mobile/runtime";
@@ -37,7 +37,6 @@ export class PlaceholderManagerView extends ItemView {
   private searchQuery = "";
   private typeFilter = "all";
   private unsubscribeFromIndex: (() => void) | null = null;
-  private lastActiveMarkdownFile: TFile | null = null;
   private renderLimit: number;
   private readonly renderChunkSize: number;
 
@@ -62,17 +61,10 @@ export class PlaceholderManagerView extends ItemView {
 
   async onOpen(): Promise<void> {
     this.unsubscribeFromIndex = this.deps.index.subscribeToChanges(() => this.safeRenderView("index update"));
-
-    this.captureActiveMarkdownFile();
-
     this.registerEvent(this.app.workspace.on(
       "active-leaf-change",
-      () => {
-        this.captureActiveMarkdownFile();
-        this.safeRenderView("active leaf change");
-      },
+      () => this.safeRenderView("active leaf change"),
     ));
-
     this.safeRenderView("view open");
   }
 
@@ -177,17 +169,9 @@ export class PlaceholderManagerView extends ItemView {
     this.renderShowMoreButton(host, records.length, visibleRecords.length, countEl);
   }
 
-  private captureActiveMarkdownFile(): void {
-    const file = this.app.workspace.getActiveFile();
-
-    if (file instanceof TFile && file.extension === "md") {
-      this.lastActiveMarkdownFile = file;
-    }
-  }
-
   private getScopedPlaceholders(): ScopedPlaceholderResult {
-    this.captureActiveMarkdownFile();
-    const activeFile = this.lastActiveMarkdownFile;
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const activeFile = activeView?.file ?? null;
 
     if (this.placeholderScope === "current") {
       return {

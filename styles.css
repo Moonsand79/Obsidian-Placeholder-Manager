@@ -23,6 +23,40 @@
   border-style: dashed;
 }
 
+/*
+ * Inactive placeholders are always split into source-syntax and semantic-text
+ * spans by CodeMirror. Source Mode shows all three spans. Live Preview hides
+ * only the syntax spans after Obsidian has mounted the editor.
+ */
+.markdown-source-view.mod-cm6.is-live-preview .placeholder-manager-token-syntax,
+.markdown-source-view.is-live-preview .placeholder-manager-token-syntax,
+.is-live-preview .placeholder-manager-token-syntax {
+  display: none !important;
+}
+
+/* Make the three visible Source Mode spans read as one continuous token. */
+.markdown-source-view:not(.is-live-preview) .placeholder-manager-token-syntax-prefix {
+  border-right-width: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  padding-right: 0;
+}
+
+.markdown-source-view:not(.is-live-preview) .placeholder-manager-token-collapsed {
+  border-left-width: 0;
+  border-right-width: 0;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.markdown-source-view:not(.is-live-preview) .placeholder-manager-token-syntax-suffix {
+  border-left-width: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 0;
+}
+
 .placeholder-manager-reading-token {
   --placeholder-manager-color: var(--interactive-accent);
 }
@@ -191,7 +225,7 @@
   }
 }
 
-/* Mobile ergonomics and bounded sidebar rendering. */
+/* Phase 15: mobile ergonomics and bounded sidebar rendering. */
 .placeholder-manager-show-more {
   display: block;
   margin: 12px auto 4px;

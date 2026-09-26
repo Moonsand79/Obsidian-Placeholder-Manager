@@ -23,7 +23,7 @@ Schema version 1 is:
 
 ## Schema 0: legacy 0.1.x data
 
-Legacy 0.1.x builds persisted `PlaceholderSettings` directly with no schema envelope. Any object that does not contain a `schemaVersion` key is treated as schema 0. It is normalized using the V1 rules, loaded into runtime, and marked for a one-time rewrite into schema 1.
+Builds before Phase 12 persisted `PlaceholderSettings` directly with no schema envelope. Any object that does not contain a `schemaVersion` key is treated as schema 0. It is normalized using the existing V1 rules, loaded into runtime, and marked for a one-time rewrite into schema 1.
 
 Missing plugin data (`null`/`undefined`) is not treated as a migration and does not force an immediate write; defaults are used until settings are first saved.
 

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   formatPlaceholder,
+  getPlaceholderTextSourceRange,
   parsePlaceholders,
   splitFields,
 } from "../../src/parser/parser";
@@ -61,6 +62,25 @@ test("ignores inline code examples", () => {
 test("can parse code-like text when exclusion is explicitly disabled", () => {
   const [item] = parsePlaceholders("`{{ph: rendered text}}`", "", { excludeMarkdown: false });
   assert.equal(item?.text, "rendered text");
+});
+
+
+test("locates the visible text field inside raw placeholder syntax", () => {
+  const source = "Before {{ph: exact road | research | high}} after";
+  const [item] = parsePlaceholders(source);
+  assert.ok(item);
+  const range = getPlaceholderTextSourceRange(item);
+  assert.ok(range);
+  assert.equal(source.slice(range.start, range.end), "exact road");
+});
+
+test("visible text range respects escaped pipes", () => {
+  const source = String.raw`{{ph: A \| B | prose}}`;
+  const [item] = parsePlaceholders(source);
+  assert.ok(item);
+  const range = getPlaceholderTextSourceRange(item);
+  assert.ok(range);
+  assert.equal(source.slice(range.start, range.end), String.raw`A \| B`);
 });
 
 test("formats compact syntax", () => {

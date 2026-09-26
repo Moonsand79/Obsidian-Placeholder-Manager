@@ -17,6 +17,3 @@ data.json
 
 # Disposable compiled performance harness
 .benchmark-build/
-
-# Staged release payload; generated only after release gates pass.
-dist/

@@ -3,12 +3,6 @@ import {
   InvariantViolationError,
 } from "../dev-invariants";
 
-declare const __PLACEHOLDER_DEV_ASSERTIONS__: boolean;
-const BUILD_ASSERTIONS_ENABLED =
-  typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "boolean"
-    ? __PLACEHOLDER_DEV_ASSERTIONS__
-    : true;
-
 export const ERROR_CODES = {
   STARTUP: "PM-START-001",
   INDEX_INITIAL_SCAN: "PM-IDX-001",
@@ -119,13 +113,7 @@ export class ObsidianPlaceholderErrorReporter implements PlaceholderErrorReporte
   }
 
   private surfaceInvariant(error: unknown): void {
-    if (
-      !BUILD_ASSERTIONS_ENABLED ||
-      !(error instanceof InvariantViolationError)
-    ) {
-      return;
-    }
-
+    if (!(typeof __PLACEHOLDER_DEV_ASSERTIONS__ === "undefined" || __PLACEHOLDER_DEV_ASSERTIONS__) || !(error instanceof InvariantViolationError)) return;
     // Assertions are development contracts. Surface them as an actual
     // asynchronous exception rather than silently converting them into a
     // recoverable runtime failure.

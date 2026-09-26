@@ -154,8 +154,8 @@ async function main(): Promise<void> {
       isUnknownType: (type) => type === "old-type",
     });
   };
-  add("sidebar.filter.10k", measureSync(() => sidebarFilter(sidebar10k), { warmup: 6, samples: 30 }));
-  add("sidebar.filter.50k", measureSync(() => sidebarFilter(sidebar50k), { warmup: 4, samples: 20 }));
+  add("sidebar.filter.10k", measureSync(() => sidebarFilter(sidebar10k), { warmup: 10, samples: 100 }));
+  add("sidebar.filter.50k", measureSync(() => sidebarFilter(sidebar50k), { warmup: 8, samples: 60 }));
 
   console.log(`Placeholder Manager performance benchmarks`);
   console.log(`Node ${process.version} · ${process.platform}/${process.arch}`);
